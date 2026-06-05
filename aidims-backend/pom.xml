@@ -94,13 +94,8 @@
             <version>${dcm4che.version}</version>
         </dependency>
      
-        <dependency>
-            <groupId>org.dcm4che</groupId>
-            <artifactId>dcm4che-imageio-opencv</artifactId>
-            <version>${dcm4che.version}</version>
-            
-            <optional>true</optional>
-        </dependency>
+        <!-- dcm4che-imageio-opencv removed: requires native OpenCV binaries.
+             Pixel data is now extracted directly from DICOM attributes. -->
 
     </dependencies>
 
