@@ -20,9 +20,19 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/auth/**",
+                                
+                                // Nhóm User - Bao trọn các method GET, PUT, PATCH, DELETE
+                                "/api/users", 
+                                "/api/users/**", 
+                                "/api/users/update-status/**",
+                                
+                                // Nhóm Receptionist & Triệu chứng
                                 "/api/receptionist/**",
-                                "/api/receptionist/symptom",
+                                "/api/receptionist/symptom", 
+                                "/api/receptionist/symptom/**", 
                                 "/api/receptionist/dashboard",
+                                
+                                // Các module khác
                                 "/api/patients/**",
                                 "/api/symptom-record/**",
                                 "/api/diagnostic-reports/**",
@@ -33,7 +43,10 @@ public class SecurityConfig {
                                 "/api/verify-image/**",
                                 "/api/compare-images/**",
                                 "/api/dicom-viewer/**",
-                                "/api/dicom/**"
+                                "/api/dicom/**",
+                                
+                                // Nhóm Technician
+                                "/api/technician/**" 
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
