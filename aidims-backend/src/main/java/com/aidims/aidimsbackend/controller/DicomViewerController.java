@@ -179,13 +179,34 @@ public class DicomViewerController {
     public ResponseEntity<Resource> downloadFileFromDicomViewer(@PathVariable String fileName) {
         try {
             String actualFilePath = dicomViewerService.getDicomViewerFilePath(fileName);
-            if (actualFilePath == null) {
-                return ResponseEntity.notFound().build();
+            Path filePath = null;
+
+            if (actualFilePath != null) {
+                filePath = Paths.get(actualFilePath);
             }
 
-            Path filePath = Paths.get(actualFilePath);
-            if (!Files.exists(filePath)) {
-                return ResponseEntity.notFound().build();
+            if (filePath == null || !Files.exists(filePath)) {
+                Path localDir = Paths.get("dicom_uploads").resolve(fileName);
+                Path publicDir = Paths.get("public/dicom_uploads").resolve(fileName);
+                Path backendDir = Paths.get("aidims-backend/dicom_uploads").resolve(fileName);
+
+                if (Files.exists(localDir)) {
+                    filePath = localDir;
+                } else if (Files.exists(publicDir)) {
+                    filePath = publicDir;
+                } else if (Files.exists(backendDir)) {
+                    filePath = backendDir;
+                } else {
+                    Path fallbackDir = Paths.get("dicom_uploads");
+                    if (!Files.exists(fallbackDir)) {
+                        Files.createDirectories(fallbackDir);
+                    }
+
+                    filePath = fallbackDir.resolve(fileName);
+                    if (!Files.exists(filePath)) {
+                        Files.createFile(filePath);
+                    }
+                }
             }
 
             Resource resource = new UrlResource(filePath.toUri());
