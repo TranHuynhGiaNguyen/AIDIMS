@@ -1,5 +1,6 @@
 package com.aidims.aidimsbackend.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -101,7 +102,7 @@ public class RequestPhotoService {
         entity.setClinicalIndication(dto.getClinicalIndication());
         entity.setNotes(dto.getNotes());
         entity.setPriorityLevel(dto.getPriorityLevel() != null ? dto.getPriorityLevel() : "normal");
-        entity.setRequestDate(dto.getRequestDate());
+        entity.setRequestDate(dto.getRequestDate() != null ? dto.getRequestDate() : LocalDate.now());
         entity.setStatus(dto.getStatus() != null ? dto.getStatus() : "pending");
         return entity;
     }

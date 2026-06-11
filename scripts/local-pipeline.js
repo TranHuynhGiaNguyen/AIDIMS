@@ -15,20 +15,20 @@ try {
     execSync(mvnCmd, { cwd: './aidims-backend', stdio: 'inherit' });
     console.log(' - Backend Unit Tests: PASS.');
 } catch (error) {
-    console.error(' ❌ Lỗi: Backend Unit Tests thất bại. Quy trình dừng lại.');
+    console.error('  Lỗi: Backend Unit Tests thất bại. Quy trình dừng lại.');
     process.exit(1);
 }
 
 try {
     console.log(' - Đang chạy Frontend Unit Tests...');
-    execSync('npm test -- --watchAll=false', { 
-        cwd: './aidims-frontend', 
+    execSync('npm test -- --watchAll=false', {
+        cwd: './aidims-frontend',
         stdio: 'inherit',
         env: { ...process.env, CI: 'true' }
     });
     console.log(' - Frontend Unit Tests: PASS.');
 } catch (error) {
-    console.error(' ❌ Lỗi: Frontend Unit Tests thất bại. Quy trình dừng lại.');
+    console.error('  Lỗi: Frontend Unit Tests thất bại. Quy trình dừng lại.');
     process.exit(1);
 }
 
@@ -60,6 +60,7 @@ try {
 }
 
 // 4. Quyết định đẩy code lên GitHub (Tự động commit/push khi kiểm thử thành công)
+/*
 if (testSuccess) {
     console.log(' Bước 3: Test thành công! Đang tiến hành tự động commit và push code...');
     try {
@@ -89,4 +90,4 @@ if (testSuccess) {
     console.log(' QUY TRÌNH DỪNG LẠI: Phát hiện API test bị lỗi. Code KHÔNG được đẩy lên GitHub.');
     console.log(' Vui lòng kiểm tra lỗi trên bảng Jira, sửa code và chạy lại quy trình.');
     process.exit(1);
-}
+}*/
