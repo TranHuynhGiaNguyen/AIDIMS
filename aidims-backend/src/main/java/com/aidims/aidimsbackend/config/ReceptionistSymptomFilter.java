@@ -32,6 +32,7 @@ public class ReceptionistSymptomFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
         String patientIdValue = request.getParameter("patientId");
         String description = request.getParameter("description");
 
@@ -39,6 +40,7 @@ public class ReceptionistSymptomFilter extends OncePerRequestFilter {
                 || description == null || description.trim().isEmpty()) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
             objectMapper.writeValue(response.getWriter(), Map.of(
                     "status", "error",
                     "message", "Thiếu patientId hoặc description"));
@@ -51,6 +53,7 @@ public class ReceptionistSymptomFilter extends OncePerRequestFilter {
         } catch (NumberFormatException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
             objectMapper.writeValue(response.getWriter(), Map.of(
                 "status", "error",
                 "message", e.getMessage()));
@@ -65,6 +68,7 @@ public class ReceptionistSymptomFilter extends OncePerRequestFilter {
 
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
         objectMapper.writeValue(response.getWriter(), body);
     }
 }
