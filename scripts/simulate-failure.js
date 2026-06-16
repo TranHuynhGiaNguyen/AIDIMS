@@ -1,5 +1,9 @@
 const fs = require('fs');
 const { execSync } = require('child_process');
+const path = require('path');
+
+// Ensure working directory is the project root
+process.chdir(path.resolve(__dirname, '..'));
 
 console.log('🤖 Simulating a Postman Test Failure...');
 
