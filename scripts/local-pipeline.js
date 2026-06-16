@@ -1,5 +1,9 @@
 const { execSync } = require('child_process');
 const fs = require('fs');
+const path = require('path');
+
+// Đảm bảo thư mục làm việc luôn là thư mục gốc của dự án (project root)
+process.chdir(path.resolve(__dirname, '..'));
 
 const COLLECTION_PATH = './tests/aidims_collection.json';
 const ENV_PATH = './tests/environment.json';
@@ -7,28 +11,130 @@ const REPORT_PATH = './newman-report.json';
 
 console.log(' [CI/CD Local] Bắt đầu quy trình tự động hóa...');
 
+// Dọn dẹp file report cũ nếu có để tránh kết quả bị cũ (stale)
+if (fs.existsSync(REPORT_PATH)) {
+    try {
+        fs.unlinkSync(REPORT_PATH);
+    } catch (e) {
+        console.warn('⚠️ Cảnh báo: Không thể xóa file report cũ:', e.message);
+    }
+}
+
+// Helper to parse Maven Surefire reports for Backend Unit Test failures
+function parseBackendUtFailures() {
+    const reportsDir = './aidims-backend/target/surefire-reports';
+    if (!fs.existsSync(reportsDir)) return '[]';
+    
+    let failures = [];
+    try {
+        const files = fs.readdirSync(reportsDir);
+        for (const file of files) {
+            if (file.endsWith('.txt')) {
+                const filepath = path.join(reportsDir, file);
+                const content = fs.readFileSync(filepath, 'utf8');
+                const lines = content.split(/\r?\n/);
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (line.startsWith('Tests run:')) continue; // Skip test set summary lines
+                    
+                    if (line.includes('<<< FAILURE!') || line.includes('<<< ERROR!')) {
+                        let testCase = line.split('<<<')[0].trim();
+                        if (testCase.includes(' -- ')) {
+                            testCase = testCase.split(' -- ')[0];
+                        }
+                        let errMsg = '';
+                        if (i + 1 < lines.length) {
+                            errMsg = lines[i + 1].trim();
+                        }
+                        failures.push({ testCase, errMsg });
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('⚠️ Cảnh báo: Không thể parse báo cáo test Backend:', e.message);
+    }
+    
+    return JSON.stringify(failures);
+}
+
+// Helper to parse Jest console output for Frontend Unit Test failures
+function parseFrontendUtFailures(error) {
+    const output = (error.stdout ? error.stdout.toString() : '') + '\n' + (error.stderr ? error.stderr.toString() : '');
+    if (!output.trim()) return '[]';
+    
+    const sections = output.split('●');
+    if (sections.length <= 1) {
+        const lines = output.split('\n');
+        return JSON.stringify([{ testCase: 'TC-UT-FRONTEND', errMsg: lines.slice(-15).join('\n').trim() }]);
+    }
+    
+    let failures = [];
+    for (let i = 1; i < sections.length; i++) {
+        const lines = sections[i].split('\n');
+        const testCase = lines[0].trim();
+        let errMsgLines = [];
+        for (let j = 1; j < lines.length; j++) {
+            const line = lines[j].trim();
+            if (line.startsWith('at ')) break;
+            if (line) {
+                errMsgLines.push(line);
+            }
+        }
+        failures.push({ testCase, errMsg: errMsgLines.join('\n') });
+    }
+    
+    return JSON.stringify(failures);
+}
+
 // 0. Chạy Unit Tests cho cả Backend và Frontend
 console.log(' Bước 0: Đang chạy Unit Tests...');
 try {
     console.log(' - Đang chạy Backend Unit Tests...');
     const mvnCmd = process.platform === 'win32' ? 'mvnw.cmd test' : './mvnw test';
-    execSync(mvnCmd, { cwd: './aidims-backend', stdio: 'inherit' });
+    const output = execSync(mvnCmd, { cwd: './aidims-backend', stdio: 'pipe' });
+    console.log(output.toString());
     console.log(' - Backend Unit Tests: PASS.');
 } catch (error) {
+    if (error.stdout) process.stdout.write(error.stdout);
+    if (error.stderr) process.stderr.write(error.stderr);
     console.error('  Lỗi: Backend Unit Tests thất bại. Quy trình dừng lại.');
+    console.log('  Đang đồng bộ lỗi Backend Unit Test lên Jira...');
+    const details = parseBackendUtFailures();
+    try {
+        execSync('node ./scripts/jira-sync.js', {
+            stdio: 'inherit',
+            env: { ...process.env, BACKEND_UT_STATUS: 'failed', BACKEND_UT_DETAILS: details }
+        });
+    } catch (syncError) {
+        console.error('  Lỗi khi đồng bộ lên Jira:', syncError.message);
+    }
     process.exit(1);
 }
 
 try {
     console.log(' - Đang chạy Frontend Unit Tests...');
-    execSync('npm test -- --watchAll=false', {
+    const output = execSync('npm test -- --watchAll=false', {
         cwd: './aidims-frontend',
-        stdio: 'inherit',
+        stdio: 'pipe',
         env: { ...process.env, CI: 'true' }
     });
+    console.log(output.toString());
     console.log(' - Frontend Unit Tests: PASS.');
 } catch (error) {
+    if (error.stdout) process.stdout.write(error.stdout);
+    if (error.stderr) process.stderr.write(error.stderr);
     console.error('  Lỗi: Frontend Unit Tests thất bại. Quy trình dừng lại.');
+    console.log('  Đang đồng bộ lỗi Frontend Unit Test lên Jira...');
+    const details = parseFrontendUtFailures(error);
+    try {
+        execSync('node ./scripts/jira-sync.js', {
+            stdio: 'inherit',
+            env: { ...process.env, BACKEND_UT_STATUS: 'passed', FRONTEND_UT_STATUS: 'failed', FRONTEND_UT_DETAILS: details }
+        });
+    } catch (syncError) {
+        console.error('  Lỗi khi đồng bộ lên Jira:', syncError.message);
+    }
     process.exit(1);
 }
 
@@ -53,7 +159,10 @@ try {
 // 3. Gọi Script đồng bộ kết quả lên Jira (Log Bug hoặc Auto-Close Bug)
 console.log(' Bước 2: Đồng bộ kết quả lên Jira...');
 try {
-    execSync('node ./scripts/jira-sync.js', { stdio: 'inherit' });
+    execSync('node ./scripts/jira-sync.js', {
+        stdio: 'inherit',
+        env: { ...process.env, BACKEND_UT_STATUS: 'passed', FRONTEND_UT_STATUS: 'passed' }
+    });
 } catch (error) {
     console.error(' Lỗi khi đồng bộ lên Jira:', error.message);
     process.exit(1);

@@ -172,18 +172,25 @@ async function run() {
             }
         }
 
-        console.log('🔍 Analyzing Newman test report...');
+        console.log('🔍 Checking unit test statuses and Newman test report...');
 
-        if (!fs.existsSync(REPORT_PATH)) {
-            console.error(` Error: Newman report file not found at: ${REPORT_PATH}`);
-            process.exit(1);
+        let failures = [];
+        let failedCount = 0;
+        let hasNewmanReport = false;
+
+        if (fs.existsSync(REPORT_PATH)) {
+            try {
+                const report = JSON.parse(fs.readFileSync(REPORT_PATH, 'utf8'));
+                failures = report.run.failures || [];
+                failedCount = report.run.stats?.assertions?.failed || 0;
+                hasNewmanReport = true;
+                console.log(` Stats: Total Newman assertions failed: ${failedCount}. Executed failures length: ${failures.length}.`);
+            } catch (e) {
+                console.error(`⚠️ Error reading/parsing Newman report: ${e.message}`);
+            }
+        } else {
+            console.log('ℹ️ Newman report file not found. Skipping API test check.');
         }
-
-        const report = JSON.parse(fs.readFileSync(REPORT_PATH, 'utf8'));
-        const failures = report.run.failures || [];
-        const failedCount = report.run.stats.assertions.failed;
-
-        console.log(` Stats: Total assertions failed: ${failedCount}. Executed failures length: ${failures.length}.`);
 
         // 1. Fetch all active bugs from Jira once using standard /search/jql endpoint and filter by [Bug-CI] in JavaScript
         console.log(' Fetching active bugs from Jira...');
@@ -203,12 +210,464 @@ async function run() {
             activeBugMap[bug.fields.summary] = bug;
         }
 
-
-
         const currentFailedSummaries = new Set();
         const failedRequests = {};
 
-        if (failedCount > 0) {
+        const BACKEND_UT_STATUS = process.env.BACKEND_UT_STATUS;
+        const FRONTEND_UT_STATUS = process.env.FRONTEND_UT_STATUS;
+        const BACKEND_UT_DETAILS = process.env.BACKEND_UT_DETAILS;
+        const FRONTEND_UT_DETAILS = process.env.FRONTEND_UT_DETAILS;
+
+        let backendFailures = [];
+        try {
+            if (BACKEND_UT_DETAILS) {
+                backendFailures = JSON.parse(BACKEND_UT_DETAILS);
+            }
+        } catch (e) {
+            if (BACKEND_UT_DETAILS) {
+                backendFailures = [{ testCase: 'TC-UT-BACKEND', errMsg: BACKEND_UT_DETAILS }];
+            }
+        }
+
+        let frontendFailures = [];
+        try {
+            if (FRONTEND_UT_DETAILS) {
+                frontendFailures = JSON.parse(FRONTEND_UT_DETAILS);
+            }
+        } catch (e) {
+            if (FRONTEND_UT_DETAILS) {
+                frontendFailures = [{ testCase: 'TC-UT-FRONTEND', errMsg: FRONTEND_UT_DETAILS }];
+            }
+        }
+
+        const backendTestCaseIds = backendFailures.map(f => f.testCase).join(', ') || 'TC-UT-BACKEND';
+        const backendPassOrFailText = 'Fail\n\n' + (backendFailures.length > 0
+            ? backendFailures.map((f, idx) => `Test #${idx + 1}: ${f.testCase}\nMessage: ${f.errMsg}`).join('\n\n')
+            : 'Backend Unit Tests failed. Please check the local console output or build logs.');
+
+        const frontendTestCaseIds = frontendFailures.map(f => f.testCase).join(', ') || 'TC-UT-FRONTEND';
+        const frontendPassOrFailText = 'Fail\n\n' + (frontendFailures.length > 0
+            ? frontendFailures.map((f, idx) => `Test #${idx + 1}: ${f.testCase}\nMessage:\n${f.errMsg}`).join('\n\n')
+            : 'Frontend Unit Tests failed. Please check the local console output or build logs.');
+
+        console.log(` Unit Test Statuses - Backend: ${BACKEND_UT_STATUS || 'N/A'}, Frontend: ${FRONTEND_UT_STATUS || 'N/A'}`);
+
+        // Sync Backend Unit Test Failure
+        if (BACKEND_UT_STATUS === 'failed') {
+            for (const fail of backendFailures) {
+                const testCaseName = fail.testCase || 'TC-UT-BACKEND';
+                const summary = `[Bug-CI] Failure on Backend Unit Test: ${testCaseName}`;
+                currentFailedSummaries.add(summary);
+
+                if (!activeBugMap[summary]) {
+                    const passOrFailText = `Fail\n\nActual Failure Details:\nMessage: ${fail.errMsg}`;
+                    const issueBody = {
+                        fields: {
+                            project: { key: JIRA_PROJECT_KEY },
+                            summary: summary,
+                            description: {
+                                type: 'doc',
+                                version: 1,
+                                content: [
+                                    {
+                                        type: 'paragraph',
+                                        content: [
+                                            {
+                                                type: 'text',
+                                                text: 'Test case ID*\n',
+                                                marks: [{ type: 'strong' }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: testCaseName + '\n\n'
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Test summary/Description*\n',
+                                                marks: [{ type: 'strong' }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: `Automated unit test failure detected in CI/CD pipeline for Backend (aidims-backend) - ${testCaseName}.\n\n`
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Pre-condition\n',
+                                                marks: [{ type: 'strong' }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Backend project compiled and built successfully.\n\n'
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Test steps*\n',
+                                                marks: [{ type: 'strong' }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: `1. Run Maven test command in the backend directory: mvn test (or mvnw.cmd test).\n2. Verify the unit test ${testCaseName} executes and passes successfully.\n\n`
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Inputs (test data)\n',
+                                                marks: [{ type: 'strong' }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: `- Build Tool: Maven\n- Command: mvn test\n- Test Case: ${testCaseName}\n\n`
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Expected result*\n',
+                                                marks: [{ type: 'strong' }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: `The unit test ${testCaseName} should pass successfully.\n\n`
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Pass/Fail\n',
+                                                marks: [{ type: 'strong' }, { type: 'textColor', attrs: { color: '#DE350B' } }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: passOrFailText
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            issuetype: { name: 'Bug' }
+                        }
+                    };
+                    console.log(` Creating new Jira bug: "${summary}"`);
+                    try {
+                        const newIssue = await callJira('/issue', {
+                            method: 'POST',
+                            body: JSON.stringify(issueBody)
+                        });
+                        console.log(` Issue created successfully: ${newIssue.key}`);
+                    } catch (err) {
+                        console.error(`❌ Error creating Backend UT bug on Jira: ${err.message}`);
+                    }
+                } else {
+                    console.log(`ℹ️ Issue already exists for "${summary}". Skipping creation.`);
+                }
+            }
+
+            if (backendFailures.length === 0) {
+                const summary = '[Bug-CI] Failure on Backend Unit Tests';
+                currentFailedSummaries.add(summary);
+
+                if (!activeBugMap[summary]) {
+                    const issueBody = {
+                        fields: {
+                            project: { key: JIRA_PROJECT_KEY },
+                            summary: summary,
+                            description: {
+                                type: 'doc',
+                                version: 1,
+                                content: [
+                                    {
+                                        type: 'paragraph',
+                                        content: [
+                                            {
+                                                type: 'text',
+                                                text: 'Test case ID*\n',
+                                                marks: [{ type: 'strong' }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'TC-UT-BACKEND\n\n'
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Test summary/Description*\n',
+                                                marks: [{ type: 'strong' }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Automated unit test failure detected in CI/CD pipeline for Backend (aidims-backend).\n\n'
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Pre-condition\n',
+                                                marks: [{ type: 'strong' }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Backend project compiled and built successfully.\n\n'
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Test steps*\n',
+                                                marks: [{ type: 'strong' }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: '1. Run Maven test command in the backend directory: mvn test (or mvnw.cmd test).\n2. Verify all unit tests execute and pass successfully.\n\n'
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Inputs (test data)\n',
+                                                marks: [{ type: 'strong' }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: '- Build Tool: Maven\n- Command: mvn test\n\n'
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Expected result*\n',
+                                                marks: [{ type: 'strong' }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'All backend unit tests should pass successfully.\n\n'
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Pass/Fail\n',
+                                                marks: [{ type: 'strong' }, { type: 'textColor', attrs: { color: '#DE350B' } }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Fail\n\nBackend Unit Tests failed. Please check the local console output or build logs.'
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            issuetype: { name: 'Bug' }
+                        }
+                    };
+                    console.log(` Creating new Jira bug: "${summary}"`);
+                    try {
+                        const newIssue = await callJira('/issue', {
+                            method: 'POST',
+                            body: JSON.stringify(issueBody)
+                        });
+                        console.log(` Issue created successfully: ${newIssue.key}`);
+                    } catch (err) {
+                        console.error(`❌ Error creating Backend UT bug on Jira: ${err.message}`);
+                    }
+                } else {
+                    console.log(`ℹ️ Issue already exists for "${summary}". Skipping creation.`);
+                }
+            }
+        }
+
+        // Sync Frontend Unit Test Failure
+        if (FRONTEND_UT_STATUS === 'failed') {
+            for (const fail of frontendFailures) {
+                const testCaseName = fail.testCase || 'TC-UT-FRONTEND';
+                const summary = `[Bug-CI] Failure on Frontend Unit Test: ${testCaseName}`;
+                currentFailedSummaries.add(summary);
+
+                if (!activeBugMap[summary]) {
+                    const passOrFailText = `Fail\n\nActual Failure Details:\nMessage:\n${fail.errMsg}`;
+                    const issueBody = {
+                        fields: {
+                            project: { key: JIRA_PROJECT_KEY },
+                            summary: summary,
+                            description: {
+                                type: 'doc',
+                                version: 1,
+                                content: [
+                                    {
+                                        type: 'paragraph',
+                                        content: [
+                                            {
+                                                type: 'text',
+                                                text: 'Test case ID*\n',
+                                                marks: [{ type: 'strong' }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: testCaseName + '\n\n'
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Test summary/Description*\n',
+                                                marks: [{ type: 'strong' }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: `Automated unit test failure detected in CI/CD pipeline for Frontend (aidims-frontend) - ${testCaseName}.\n\n`
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Pre-condition\n',
+                                                marks: [{ type: 'strong' }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Frontend dependencies are installed successfully.\n\n'
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Test steps*\n',
+                                                marks: [{ type: 'strong' }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: `1. Run npm test command in the frontend directory: npm test -- --watchAll=false.\n2. Verify the unit test ${testCaseName} executes and passes successfully.\n\n`
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Inputs (test data)\n',
+                                                marks: [{ type: 'strong' }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: `- Build Tool: npm\n- Command: npm test -- --watchAll=false\n- Test Case: ${testCaseName}\n\n`
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Expected result*\n',
+                                                marks: [{ type: 'strong' }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: `The unit test ${testCaseName} should pass successfully.\n\n`
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Pass/Fail\n',
+                                                marks: [{ type: 'strong' }, { type: 'textColor', attrs: { color: '#DE350B' } }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: passOrFailText
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            issuetype: { name: 'Bug' }
+                        }
+                    };
+                    console.log(` Creating new Jira bug: "${summary}"`);
+                    try {
+                        const newIssue = await callJira('/issue', {
+                            method: 'POST',
+                            body: JSON.stringify(issueBody)
+                        });
+                        console.log(` Issue created successfully: ${newIssue.key}`);
+                    } catch (err) {
+                        console.error(`❌ Error creating Frontend UT bug on Jira: ${err.message}`);
+                    }
+                } else {
+                    console.log(`ℹ️ Issue already exists for "${summary}". Skipping creation.`);
+                }
+            }
+
+            if (frontendFailures.length === 0) {
+                const summary = '[Bug-CI] Failure on Frontend Unit Tests';
+                currentFailedSummaries.add(summary);
+
+                if (!activeBugMap[summary]) {
+                    const issueBody = {
+                        fields: {
+                            project: { key: JIRA_PROJECT_KEY },
+                            summary: summary,
+                            description: {
+                                type: 'doc',
+                                version: 1,
+                                content: [
+                                    {
+                                        type: 'paragraph',
+                                        content: [
+                                            {
+                                                type: 'text',
+                                                text: 'Test case ID*\n',
+                                                marks: [{ type: 'strong' }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'TC-UT-FRONTEND\n\n'
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Test summary/Description*\n',
+                                                marks: [{ type: 'strong' }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Automated unit test failure detected in CI/CD pipeline for Frontend (aidims-frontend).\n\n'
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Pre-condition\n',
+                                                marks: [{ type: 'strong' }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Frontend dependencies are installed successfully.\n\n'
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Test steps*\n',
+                                                marks: [{ type: 'strong' }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: '1. Run npm test command in the frontend directory: npm test -- --watchAll=false.\n2. Verify all unit tests execute and pass successfully.\n\n'
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Inputs (test data)\n',
+                                                marks: [{ type: 'strong' }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: '- Build Tool: npm\n- Command: npm test -- --watchAll=false\n\n'
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Expected result*\n',
+                                                marks: [{ type: 'strong' }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'All frontend unit tests should pass successfully.\n\n'
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Pass/Fail\n',
+                                                marks: [{ type: 'strong' }, { type: 'textColor', attrs: { color: '#DE350B' } }]
+                                            },
+                                            {
+                                                type: 'text',
+                                                text: 'Fail\n\nFrontend Unit Tests failed. Please check the local console output or build logs.'
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            issuetype: { name: 'Bug' }
+                        }
+                    };
+                    console.log(` Creating new Jira bug: "${summary}"`);
+                    try {
+                        const newIssue = await callJira('/issue', {
+                            method: 'POST',
+                            body: JSON.stringify(issueBody)
+                        });
+                        console.log(` Issue created successfully: ${newIssue.key}`);
+                    } catch (err) {
+                        console.error(`❌ Error creating Frontend UT bug on Jira: ${err.message}`);
+                    }
+                } else {
+                    console.log(`ℹ️ Issue already exists for "${summary}". Skipping creation.`);
+                }
+            }
+        }
+
+        // Sync API Test Failures
+        if (hasNewmanReport && failedCount > 0) {
             console.log(' Failed assertions detected! Syncing errors to Jira...');
 
             // Group failures by request
@@ -346,13 +805,17 @@ async function run() {
                 };
 
                 console.log(` Creating new Jira bug: "${summary}"`);
-                const newIssue = await callJira('/issue', {
-                    method: 'POST',
-                    body: JSON.stringify(issueBody)
-                });
-                console.log(` Issue created successfully: ${newIssue.key}`);
+                try {
+                    const newIssue = await callJira('/issue', {
+                        method: 'POST',
+                        body: JSON.stringify(issueBody)
+                    });
+                    console.log(` Issue created successfully: ${newIssue.key}`);
+                } catch (err) {
+                    console.error(`❌ Error creating API bug on Jira: ${err.message}`);
+                }
             }
-        } else {
+        } else if (hasNewmanReport) {
             console.log(' All API tests passed!');
         }
 
@@ -363,8 +826,41 @@ async function run() {
                 if (issue && issue.fields && issue.fields.summary) {
                     const bugSummary = issue.fields.summary;
 
-                    // If the bug's summary is NOT in the current failed summaries, it means the API test passed in this run
-                    if (!currentFailedSummaries.has(bugSummary)) {
+                    let shouldResolve = false;
+                    let resolveMessage = '';
+
+                    if (bugSummary.startsWith('[Bug-CI] Failure on API:')) {
+                        if (hasNewmanReport && !currentFailedSummaries.has(bugSummary)) {
+                            shouldResolve = true;
+                            resolveMessage = '✅ CI/CD update: This specific API test has successfully passed in the latest run. This automated issue has been resolved.';
+                        }
+                    } else if (bugSummary.startsWith('[Bug-CI] Failure on Backend Unit Test:')) {
+                        const testCaseName = bugSummary.replace('[Bug-CI] Failure on Backend Unit Test: ', '').trim();
+                        const isStillFailing = BACKEND_UT_STATUS === 'failed' && backendFailures.some(f => f.testCase === testCaseName);
+                        if (!isStillFailing) {
+                            shouldResolve = true;
+                            resolveMessage = `✅ CI/CD update: Backend unit test "${testCaseName}" has successfully passed in the latest run. This automated issue has been resolved.`;
+                        }
+                    } else if (bugSummary === '[Bug-CI] Failure on Backend Unit Tests') {
+                        if (BACKEND_UT_STATUS === 'passed') {
+                            shouldResolve = true;
+                            resolveMessage = '✅ CI/CD update: Backend unit tests have successfully passed in the latest run. This automated issue has been resolved.';
+                        }
+                    } else if (bugSummary.startsWith('[Bug-CI] Failure on Frontend Unit Test:')) {
+                        const testCaseName = bugSummary.replace('[Bug-CI] Failure on Frontend Unit Test: ', '').trim();
+                        const isStillFailing = FRONTEND_UT_STATUS === 'failed' && frontendFailures.some(f => f.testCase === testCaseName);
+                        if (!isStillFailing) {
+                            shouldResolve = true;
+                            resolveMessage = `✅ CI/CD update: Frontend unit test "${testCaseName}" has successfully passed in the latest run. This automated issue has been resolved.`;
+                        }
+                    } else if (bugSummary === '[Bug-CI] Failure on Frontend Unit Tests') {
+                        if (FRONTEND_UT_STATUS === 'passed') {
+                            shouldResolve = true;
+                            resolveMessage = '✅ CI/CD update: Frontend unit tests have successfully passed in the latest run. This automated issue has been resolved.';
+                        }
+                    }
+
+                    if (shouldResolve) {
                         console.log(`🔧 Resolving ${issue.key} ("${bugSummary}") as it passed in this run...`);
 
                         // Fetch available transitions for this issue
@@ -391,7 +887,7 @@ async function run() {
                                         type: 'paragraph',
                                         content: [{
                                             type: 'text',
-                                            text: '✅ CI/CD update: This specific API test has successfully passed in the latest run. This automated issue has been resolved.'
+                                            text: resolveMessage
                                         }]
                                     }]
                                 }
@@ -406,7 +902,7 @@ async function run() {
                             console.warn(` Warning: Could not find a suitable 'Done/Resolved' transition for issue ${issue.key}`);
                         }
                     } else {
-                        console.log(` Bug ${issue.key} is still failing. Keeping it open.`);
+                        console.log(` Keeping active bug ${issue.key} ("${bugSummary}") open.`);
                     }
                 }
             }
