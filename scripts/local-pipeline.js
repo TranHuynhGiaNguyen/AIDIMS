@@ -20,6 +20,21 @@ if (fs.existsSync(REPORT_PATH)) {
     }
 }
 
+// Dọn dẹp báo cáo unit test Maven cũ để tránh hiển thị lỗi của test case đã bị xóa/đổi tên
+const surefireReportsDir = './aidims-backend/target/surefire-reports';
+if (fs.existsSync(surefireReportsDir)) {
+    try {
+        if (fs.rmSync) {
+            fs.rmSync(surefireReportsDir, { recursive: true, force: true });
+        } else {
+            fs.rmdirSync(surefireReportsDir, { recursive: true });
+        }
+    } catch (e) {
+        console.warn('⚠️ Cảnh báo: Không thể xóa thư mục surefire-reports cũ:', e.message);
+    }
+}
+
+
 // Helper to parse Maven Surefire reports for Backend Unit Test failures
 function parseBackendUtFailures() {
     const reportsDir = './aidims-backend/target/surefire-reports';
