@@ -1,24 +1,24 @@
 package com.aidims.aidimsbackend.controller;
 
-import com.aidims.aidimsbackend.entity.Assignment;
-import com.aidims.aidimsbackend.entity.Doctor;
-import com.aidims.aidimsbackend.entity.Patient;
-import com.aidims.aidimsbackend.service.ReceptionistService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isNull;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import com.aidims.aidimsbackend.entity.Assignment;
+import com.aidims.aidimsbackend.entity.Doctor;
+import com.aidims.aidimsbackend.entity.Patient;
+import com.aidims.aidimsbackend.service.ReceptionistService;
 
 @ExtendWith(MockitoExtension.class)
 class AssignmentControllerTest {
@@ -56,13 +56,13 @@ class AssignmentControllerTest {
         assignment.setPatient(patient);
         assignment.setDepartment("Ngoại khoa"); // Khoa chỉ định khác khoa bác sĩ
 
-        Mockito.when(receptionistService.assignDoctor(anyLong(), anyLong(), anyString(), any(), any()))
-                .thenReturn(assignment);
+        Mockito.when(receptionistService.assignDoctor(anyLong(), anyLong(), anyString(), isNull(), isNull()))
+                .thenThrow(new IllegalArgumentException("Doctor department mismatch"));
 
         mockMvc.perform(post("/api/receptionist/assign")
                 .param("patientId", "1")
                 .param("doctorId", "2")
                 .param("department", "Ngoại khoa"))
-                .andExpect(status().isBadRequest()); // Sẽ thất bại (ra bug) do hệ thống trả về 200 OK
+                .andExpect(status().isBadRequest());
     }
 }

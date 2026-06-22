@@ -144,6 +144,10 @@ public class SymptomRecordController {
                 priorityLevel == null || priorityLevel.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body("Thiếu thông tin bắt buộc!");
             }
+            // Kiểm tra thang điểm đau hợp lệ
+            if (painScale != null && (painScale < 0 || painScale > 10)) {
+                return ResponseEntity.badRequest().body("Pain Scale phải nằm trong khoảng từ 0 đến 10");
+            }
             // Không kiểm tra trùng lặp để test lưu triệu chứng
             SymptomRecord symptom = new SymptomRecord();
             symptom.setPatientId(patientId);

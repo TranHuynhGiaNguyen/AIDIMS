@@ -1,14 +1,22 @@
 package com.aidims.aidimsbackend.controller;
 
-import com.aidims.aidimsbackend.dto.RequestPhotoDTO;
-import com.aidims.aidimsbackend.service.RequestPhotoService;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.aidims.aidimsbackend.dto.RequestPhotoDTO;
+import com.aidims.aidimsbackend.service.RequestPhotoService;
 
 @RestController
 @RequestMapping("/api/request-photo")
@@ -54,6 +62,11 @@ public class RequestPhotoController {
             if (dto.getClinicalIndication() == null || dto.getClinicalIndication().trim().isEmpty()) {
                 return ResponseEntity.badRequest()
                         .body(createResponse("error", "Thông tin lâm sàng không được để trống", null));
+            }
+
+            if (dto.getRequestDate() != null && dto.getRequestDate().isBefore(java.time.LocalDate.now())) {
+                return ResponseEntity.badRequest()
+                        .body(createResponse("error", "Ngày chỉ định không được ở quá khứ", null));
             }
 
             RequestPhotoDTO result = requestPhotoService.createRequest(dto);
