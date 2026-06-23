@@ -1,5 +1,6 @@
 package com.aidims.aidimsbackend.controller;
 
+import java.util.Set;
 import com.aidims.aidimsbackend.dto.DicomAnalysisResponse;
 import com.aidims.aidimsbackend.dto.ImageAnalysisRequest;
 import com.aidims.aidimsbackend.service.ChatService;
@@ -46,8 +47,15 @@ public class DicomAnalysisController {
             return bad("File rỗng");
         if (file.getSize() > 100L * 1024 * 1024)
             return bad("File quá lớn (tối đa 100MB)");
-        if (filename != null && !filename.toLowerCase().endsWith(".dcm"))
-            return bad("Chỉ hỗ trợ file .dcm");
+        String extension = "";
+           boolean hasExtension = filename != null && filename.contains(".");
+        if (hasExtension) {
+            extension = filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
+}
+        Set<String> validDicomExtensions = Set.of("dcm", "dicom", "dc3", "dic");
+        if (hasExtension && !validDicomExtensions.contains(extension)) {
+            return bad("Chỉ hỗ trợ file DICOM (.dcm, .dicom, .dc3, .dic) hoặc file không có đuôi (từ PACS)");
+}
 
         try {
             // ── 1. Convert DICOM → base64 JPEG + metadata ─────────────────

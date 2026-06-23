@@ -1,12 +1,16 @@
 package com.aidims.aidimsbackend.service;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
 
 @Service
 public class CompareImagesService {
@@ -93,6 +97,7 @@ public class CompareImagesService {
     }
 
     private String generateImageUrl(String fileName) {
-        return "http://localhost:" + serverPort + "/api/dicom-viewer/image/" + fileName;
+        String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8);
+        return "http://localhost:" + serverPort + "/api/dicom-viewer/image/" + encodedFileName;
     }
 }

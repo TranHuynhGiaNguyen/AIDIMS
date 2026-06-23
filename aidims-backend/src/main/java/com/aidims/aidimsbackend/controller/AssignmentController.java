@@ -45,8 +45,12 @@ public class AssignmentController {
             @RequestParam String department,
             @RequestParam(required = false) String priority,
             @RequestParam(required = false) String notes) {
-        Assignment assignment = receptionistService.assignDoctor(patientId, doctorId, department, priority, notes);
-        return ResponseEntity.ok(assignment);
+        try {
+            Assignment assignment = receptionistService.assignDoctor(patientId, doctorId, department, priority, notes);
+            return ResponseEntity.ok(assignment);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @GetMapping("/assignments")

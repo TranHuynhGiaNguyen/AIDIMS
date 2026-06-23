@@ -14,6 +14,10 @@ import org.springframework.web.multipart.MultipartFile;
 public class DicomFileService {
 
     public void saveAndCopyToFrontend(MultipartFile file) throws IOException {
+        
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Hệ thống từ chối nhận file rỗng (0 bytes)");
+        }
         // Lưu vào backend
         Path backendDir = Paths.get("dicom_uploads");
         Files.createDirectories(backendDir);

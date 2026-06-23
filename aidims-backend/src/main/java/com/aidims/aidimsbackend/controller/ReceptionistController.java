@@ -1,6 +1,9 @@
 package com.aidims.aidimsbackend.controller;
 
+import java.util.NoSuchElementException;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,8 +28,13 @@ public class ReceptionistController {
     }
 
     @GetMapping("/doctor/{id}")
-    public Doctor getDoctorById(@PathVariable Long id) {
-        return receptionistService.getDoctorById(id);
+    public ResponseEntity<Doctor> getDoctorById(@PathVariable Long id) {
+        try {
+            Doctor doctor = receptionistService.getDoctorById(id);
+            return ResponseEntity.ok(doctor);
+        } catch (NoSuchElementException ex) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping("/patients/{id}")
