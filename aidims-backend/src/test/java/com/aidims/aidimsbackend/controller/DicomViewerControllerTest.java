@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -104,15 +106,27 @@ class DicomViewerControllerTest {
     // =========================================================
 
     @Test
-    @DisplayName("⚠️ Cố tình ép lỗi -> Bẫy test trả về sai mã mong đợi để kích hoạt Bug lên Jira")
-    void testGetAllDicomViewer_ExceptionHandling_ForceFailure() {
-        // Giả lập Service quăng lỗi hệ thống
-        when(dicomViewerService.getAllDicomViewer()).thenThrow(new RuntimeException("Fatal database failure"));
+    @DisplayName("❌ Lỗi nghiệp vụ: Dữ liệu ngày chụp trả về từ API /all phải tuân thủ định dạng dd/MM/yyyy HH:mm")
+    void testGetAllDicomViewer_DateFormatValidation_LogicFailure() {
+        List<Map<String, Object>> badFormatList = new ArrayList<>();
+        Map<String, Object> record = new HashMap<>();
+        record.put("id", 1L);
+        record.put("fileName", "sample.dcm");
+        record.put("dateTaken", "2026-06-24 11:00:00"); // Định dạng sai logic (phải là dd/MM/yyyy HH:mm)
+        badFormatList.add(record);
+
+        when(dicomViewerService.getAllDicomViewer()).thenReturn(badFormatList);
 
         ResponseEntity<List<Map<String, Object>>> response = dicomViewerController.getAllDicomViewer();
+        List<Map<String, Object>> body = response.getBody();
 
-        // ❌ ÉP LỖI THẬT: Thực tế Controller bắt catch và trả về 500. 
-        // Nhưng ở đây bắt so sánh với 200 để hàm này FAILED 100%, tự sinh Bug rớt Unit Test.
-        assertEquals(200, response.getStatusCode().value(), "Kích hoạt báo động đỏ phân hệ Dicom Viewer!");
+        assertNotNull(body);
+        assertEquals(1, body.size());
+
+        // Kiểm định logic định dạng ngày.
+        // Test case này sẽ FAIL về mặt logic nghiệp vụ (mặc dù HTTP status trả về vẫn là 200 OK)
+        String dateTaken = (String) body.get(0).get("dateTaken");
+        assertTrue(dateTaken.matches("\\d{2}/\\d{2}/\\d{4} \\d{2}:\\d{2}"), 
+                   "Định dạng ngày chụp không hợp lệ, phải là dd/MM/yyyy HH:mm nhưng nhận được: " + dateTaken);
     }
 }

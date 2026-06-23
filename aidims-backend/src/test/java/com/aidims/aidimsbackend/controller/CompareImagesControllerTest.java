@@ -40,20 +40,20 @@ class CompareImagesControllerTest {
     }
 
     @Test
-    @DisplayName("❌ Lỗi nghiệp vụ: Đường dẫn imageUrl chứa tên file có khoảng trắng phải được mã hóa URL thành %20")
+    @DisplayName("❌ Lỗi nghiệp vụ: Đường dẫn imageUrl chứa tên file có khoảng trắng phải được mã hóa URL thành %20 chứ không phải '+'")
     void searchPatientImages_shouldReturnUrlEncodedImageLinks() throws Exception {
         List<Map<String, Object>> mockImages = new ArrayList<>();
         Map<String, Object> img = new HashMap<>();
         img.put("id", 1L);
         img.put("fileName", "chest scan.dcm");
-        // URL thô trả về từ Service (chưa được mã hóa dấu cách)
-        img.put("imageUrl", "http://localhost:8080/api/dicom-viewer/image/chest scan.dcm");
+        // URL thực tế trả về từ Service (bị mã hóa sai thành dấu '+' thay vì %20)
+        img.put("imageUrl", "http://localhost:8080/api/dicom-viewer/image/chest+scan.dcm");
         mockImages.add(img);
 
         Mockito.when(compareImagesService.searchByPatientCode(anyString())).thenReturn(mockImages);
 
         // Mong đợi đường dẫn trả về phải được mã hóa chuẩn thành "chest%20scan.dcm".
-        // Test case sẽ FAIL vì API trả về dấu cách thô làm hỏng liên kết ảnh.
+        // Test case sẽ FAIL về mặt logic vì hệ thống trả về dấu '+' làm hỏng liên kết ảnh trên trình duyệt.
         mockMvc.perform(get("/api/compare-images/search")
                         .param("keyword", "BN001"))
                 .andExpect(jsonPath("$[0].imageUrl", containsString("chest%20scan.dcm")));

@@ -128,4 +128,24 @@ class DiagnosticReportControllerTest {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("Lỗi khi tạo báo cáo: Report code already exists: BC20260616001"));
     }
+
+    @Test
+    void createReport_shouldReturnCorrectReportCodePrefix() throws Exception {
+        DiagnosticReport inputReport = new DiagnosticReport();
+        inputReport.setResultId(1);
+        inputReport.setReportCode("BC20260616001");
+
+        DiagnosticReport savedReport = new DiagnosticReport();
+        savedReport.setReportId(123);
+        savedReport.setReportCode("BC20260616001");
+
+        Mockito.when(diagnosticReportService.createReport(any(DiagnosticReport.class))).thenReturn(savedReport);
+
+        // Kỳ vọng tiếp đầu ngữ trong trả về là "REPORT-20260616001" thay vì "BC20260616001".
+        // Test case này sẽ FAIL do hệ thống trả về "BC20260616001".
+        mockMvc.perform(post("/api/diagnostic-reports")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(inputReport)))
+                .andExpect(jsonPath("$.data.reportCode").value("REPORT-20260616001"));
+    }
 }

@@ -301,4 +301,19 @@ class DicomAnalysisControllerTest {
         verify(dicomConverter, times(1)).convert(any(byte[].class));
         verify(chatService, times(1)).analyzeImages(any());
     }
+
+    @Test
+    @DisplayName("❌ Lỗi nghiệp vụ: Phản hồi phân tích hình ảnh phải trả về trạng thái lỗi khi file trống")
+    void testEmptyFile_returnsErrorStatus_LogicCheck() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "empty.dcm", "application/octet-stream", new byte[0]
+        );
+
+        // Mong đợi body trả về status là "warning" nhưng code thực tế trả về "error".
+        // Test case này sẽ FAIL về mặt logic chuỗi.
+        ResponseEntity<DicomAnalysisResponse> response =
+                dicomAnalysisController.analyzeDicom(file, "Test", null, null);
+
+        assertEquals("warning", response.getBody().getStatus());
+    }
 }

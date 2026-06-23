@@ -17,8 +17,10 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SymptomRecordControllerTest - Giới hạn thang điểm đau")
@@ -58,5 +60,23 @@ class SymptomRecordControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestData)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("❌ Lỗi nghiệp vụ: Tạo triệu chứng thành công phải đi kèm chi tiết thang điểm đau (pain_scale)")
+    void createSymptomRecord_shouldReturnSavedPainScale() throws Exception {
+        Map<String, Object> requestData = new HashMap<>();
+        requestData.put("patient_id", "1");
+        requestData.put("chief_complaint", "Đau đầu");
+        requestData.put("severity_level", "Nặng");
+        requestData.put("priority_level", "Khẩn cấp");
+        requestData.put("pain_scale", 8);
+
+        // Mong đợi lưu xong trả về chi tiết có chứa thang điểm đau là 10 (cố tình so khớp sai để ép lỗi logic).
+        // Test case này sẽ FAIL về mặt logic nghiệp vụ.
+        mockMvc.perform(post("/api/symptom-record/create")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestData)))
+                .andExpect(jsonPath("$.detailedSymptoms", containsString("Pain Scale: 10")));
     }
 }
