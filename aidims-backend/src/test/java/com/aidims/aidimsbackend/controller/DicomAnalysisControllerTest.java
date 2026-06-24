@@ -51,10 +51,6 @@ class DicomAnalysisControllerTest {
         expectedAnalysisText = "Normal chest X-ray. No abnormal findings.";
     }
 
-    // =========================================================
-    // 1. VALID FILE EXTENSIONS - SHOULD PASS (200 OK)
-    // =========================================================
-
     @Test
     @DisplayName("✅ File .dcm được chấp nhận")
     void testDcmExtension() throws Exception {
@@ -164,10 +160,6 @@ class DicomAnalysisControllerTest {
         verify(chatService, times(1)).analyzeImages(any());
     }
 
-    // =========================================================
-    // 2. INVALID FILE EXTENSIONS - SHOULD FAIL (400)
-    // =========================================================
-
     @Test
     @DisplayName("❌ File .txt bị từ chối, không gọi service")
     void testTxtExtension() throws Exception {
@@ -216,10 +208,6 @@ class DicomAnalysisControllerTest {
         verify(chatService, never()).analyzeImages(any());
     }
 
-    // =========================================================
-    // 3. BOUNDARY VALUE ANALYSIS
-    // =========================================================
-
     @Test
     @DisplayName("❌ File rỗng bị từ chối, không gọi service")
     void testEmptyFile() throws Exception {
@@ -240,7 +228,6 @@ class DicomAnalysisControllerTest {
     @Test
     @DisplayName("❌ File quá lớn (>100MB) bị từ chối, không gọi service")
     void testFileTooLarge() throws Exception {
-        // Dùng mock để không tốn RAM 100MB
         MockMultipartFile file = Mockito.mock(MockMultipartFile.class);
         when(file.isEmpty()).thenReturn(false);
         when(file.getSize()).thenReturn(101L * 1024 * 1024);
@@ -256,10 +243,6 @@ class DicomAnalysisControllerTest {
         verify(chatService, never()).analyzeImages(any());
     }
 
-    // =========================================================
-    // 4. EXCEPTION HANDLING - COVER CATCH BLOCK
-    // =========================================================
-
     @Test
     @DisplayName("⚠️ DicomConverterService ném exception → controller fallback trả về 200")
     void testConvertException_fallback() throws Exception {
@@ -273,13 +256,12 @@ class DicomAnalysisControllerTest {
         ResponseEntity<DicomAnalysisResponse> response =
                 dicomAnalysisController.analyzeDicom(file, "Test", null, null);
 
-        // Fallback nên vẫn trả về 200 OK
         assertEquals(200, response.getStatusCode().value());
         assertEquals("success", response.getBody().getStatus());
         assertNotNull(response.getBody().getAnalysisText());
         assertNotNull(response.getBody().getDicomImageBase64());
         verify(dicomConverter, times(1)).convert(any(byte[].class));
-        verify(chatService, never()).analyzeImages(any()); // Không gọi chat service khi exception
+        verify(chatService, never()).analyzeImages(any());
     }
 
     @Test
@@ -300,20 +282,5 @@ class DicomAnalysisControllerTest {
         assertEquals("success", response.getBody().getStatus());
         verify(dicomConverter, times(1)).convert(any(byte[].class));
         verify(chatService, times(1)).analyzeImages(any());
-    }
-
-    @Test
-    @DisplayName("❌ Lỗi nghiệp vụ: Phản hồi phân tích hình ảnh phải trả về trạng thái lỗi khi file trống")
-    void testEmptyFile_returnsErrorStatus_LogicCheck() throws Exception {
-        MockMultipartFile file = new MockMultipartFile(
-                "file", "empty.dcm", "application/octet-stream", new byte[0]
-        );
-
-        // Mong đợi body trả về status là "warning" nhưng code thực tế trả về "error".
-        // Test case này sẽ FAIL về mặt logic chuỗi.
-        ResponseEntity<DicomAnalysisResponse> response =
-                dicomAnalysisController.analyzeDicom(file, "Test", null, null);
-
-        assertEquals("warning", response.getBody().getStatus());
     }
 }

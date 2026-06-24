@@ -52,7 +52,7 @@ class DiagnosticReportServiceTest {
         String code = reportService.generateReportCode();
         assertNotNull(code);
         assertTrue(code.startsWith("BC"));
-        assertTrue(code.endsWith("006")); // count + 1 = 6
+        assertTrue(code.endsWith("006"));
     }
 
     @Test
@@ -234,9 +234,7 @@ class DiagnosticReportServiceTest {
 
         DiagnosticReport result = reportService.finalizeReport(1);
 
-        // Thời gian finalizedAt không được đổi
-        assertEquals(originalFinalized, result.getFinalizedAt(), 
-            "Không được ghi đè finalizedAt của báo cáo đã hoàn thành từ trước");
+        assertEquals(originalFinalized, result.getFinalizedAt());
     }
 
     @Test
@@ -249,8 +247,6 @@ class DiagnosticReportServiceTest {
         DiagnosticReport updateData = new DiagnosticReport();
         updateData.setFindings("New changes");
 
-        // Mong đợi ném ra RuntimeException vì báo cáo đã hoàn thành không được phép sửa
-        // Thực tế code không kiểm tra và vẫn cho phép sửa, dẫn đến test này bị FAIL
         assertThrows(IllegalStateException.class, () -> reportService.updateReport(1, updateData),
             "Sửa báo cáo đã hoàn thành phải ném ra ngoại lệ");
     }

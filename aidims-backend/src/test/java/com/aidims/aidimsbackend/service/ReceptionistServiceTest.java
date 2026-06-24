@@ -23,7 +23,6 @@ import com.aidims.aidimsbackend.repository.AssignmentRepository;
 import com.aidims.aidimsbackend.repository.DoctorRepository;
 import com.aidims.aidimsbackend.repository.PatientRepository;
 import com.aidims.aidimsbackend.repository.SymptomRepository;
-import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 @ExtendWith(MockitoExtension.class)
@@ -46,10 +45,6 @@ class ReceptionistServiceTest {
     @InjectMocks
     private ReceptionistService receptionistService;
 
-    // =====================================================
-    // RECORD SYMPTOM
-    // =====================================================
-
     @Nested
     @DisplayName("Record Symptom Validation")
     class SymptomTests {
@@ -67,8 +62,6 @@ class ReceptionistServiceTest {
                     IllegalArgumentException.class,
                     () -> receptionistService.recordSymptom(1L, "")
             );
-
-            // Nếu test fail => BUG
         }
 
         @Test
@@ -84,8 +77,6 @@ class ReceptionistServiceTest {
                     IllegalArgumentException.class,
                     () -> receptionistService.recordSymptom(1L, null)
             );
-
-            // Nếu fail => BUG
         }
 
         @Test
@@ -101,10 +92,6 @@ class ReceptionistServiceTest {
             );
         }
     }
-
-    // =====================================================
-    // ASSIGN DOCTOR
-    // =====================================================
 
     @Nested
     @DisplayName("Assign Doctor Validation")
@@ -185,10 +172,6 @@ class ReceptionistServiceTest {
         }
     }
 
-    // =====================================================
-    // PATIENT VALIDATION
-    // =====================================================
-
     @Nested
     @DisplayName("Create Patient Validation")
     class PatientValidationTests {
@@ -238,10 +221,6 @@ class ReceptionistServiceTest {
         }
     }
 
-    // =====================================================
-    // REPOSITORY INTERACTION
-    // =====================================================
-
     @Nested
     @DisplayName("Repository Safety")
     class RepositoryTests {
@@ -260,8 +239,6 @@ class ReceptionistServiceTest {
 
             verify(patientRepo, never())
                     .save(any(Patient.class));
-
-            // Nếu save vẫn bị gọi => BUG
         }
     }
 }

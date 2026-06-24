@@ -46,7 +46,7 @@ class VerifyImageServiceTest {
     void saveVerifyImage_Success() {
         when(verifyImageRepo.save(any(VerifyImage.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        VerifyResult resultWrapper = new VerifyResult(); // Local class/wrapper or direct usage
+        VerifyResult resultWrapper = new VerifyResult();
         VerifyImage result = verifyImageService.saveVerifyImage(sampleVerify);
 
         assertNotNull(result);
@@ -82,13 +82,11 @@ class VerifyImageServiceTest {
     @DisplayName("❌ Lỗi nghiệp vụ: Không được phép lưu duyệt ảnh với kết quả không thuộc danh sách approved/rejected")
     void saveVerifyImage_InvalidResult_ThrowsException() {
         sampleVerify.setResult("unknown_status");
-        // Service lưu thẳng mà không kiểm duyệt trạng thái, test case này sẽ FAIL
         assertThrows(IllegalArgumentException.class, () -> 
             verifyImageService.saveVerifyImage(sampleVerify),
             "Giá trị result sai chuẩn phải ném ra IllegalArgumentException"
         );
     }
     
-    // Helper local class if needed, but not required since VerifyImage works fine
     private static class VerifyResult {}
 }

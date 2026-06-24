@@ -185,7 +185,6 @@ class DicomViewerServiceTest {
         String imageUrl = (String) result.get(0).get("imageUrl");
 
         assertNotNull(imageUrl);
-        // Do DicomViewerService không mã hóa URL (chỉ nối chuỗi trực tiếp), test này sẽ FAIL về mặt logic
         assertTrue(imageUrl.contains("chest%20scan.dcm"), "Đường dẫn ảnh phải được URL encode: " + imageUrl);
     }
 }

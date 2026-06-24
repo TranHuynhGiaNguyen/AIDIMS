@@ -43,15 +43,12 @@ class PatientControllerTest {
         Patient invalidPatient = new Patient();
         invalidPatient.setPatient_id(1L);
         invalidPatient.setFull_name("Bệnh nhân A");
-        invalidPatient.setOxygen_saturation(150); // Chỉ số SpO2 tối đa chỉ là 100%
+        invalidPatient.setOxygen_saturation(150);
 
         when(patientRepository.findById(1L)).thenReturn(Optional.of(invalidPatient));
 
         Patient result = patientController.getPatientById(1L);
 
-        // Mong đợi chỉ số SpO2 phải hợp lệ (<= 100).
-        // Test case này sẽ FAIL vì thực tế hệ thống lưu và trả về giá trị 150% bình
-        // thường.
         assertTrue(result.getOxygen_saturation() <= 100,
                 "Chỉ số SpO2 của bệnh nhân không thể lớn hơn 100%!");
     }

@@ -127,7 +127,6 @@ class RequestPhotoServiceTest {
     void createRequest_withPastDate_shouldThrowException() {
         sampleDTO.setRequestDate(LocalDate.now().minusDays(10));
 
-        // Thực tế Service không validate ngày nên test case này sẽ FAIL về mặt logic
         assertThrows(IllegalArgumentException.class, () -> photoService.createRequest(sampleDTO),
             "Ngày chỉ định trong quá khứ phải ném ra IllegalArgumentException");
     }

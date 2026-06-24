@@ -75,7 +75,6 @@ class CompareImagesServiceTest {
         assertEquals("Dr. Jane Smith", transformed.get("performedBy"));
         assertEquals("dicom_uploads/chest scan.dcm", transformed.get("dicomFilePath"));
         
-        // Kiểm tra URL được mã hóa ký tự đặc biệt khoảng trắng thành %20 (hoặc mã hóa url)
         String imageUrl = (String) transformed.get("imageUrl");
         assertNotNull(imageUrl);
         assertTrue(imageUrl.contains("chest+scan.dcm") || imageUrl.contains("chest%20scan.dcm"));
@@ -91,7 +90,7 @@ class CompareImagesServiceTest {
         row.put("file_path", "dicom_uploads/mri.dcm");
         row.put("patient_code", "BN002");
         row.put("import_date", "2026-06-24T12:00:00");
-        row.put("patient_name", null); // Tên bị null
+        row.put("patient_name", null);
         rawRows.add(row);
 
         when(jdbcTemplate.queryForList(anyString(), eq("%BN002%"), eq("%BN002%")))
@@ -107,7 +106,6 @@ class CompareImagesServiceTest {
     @Test
     @DisplayName("❌ Lỗi nghiệp vụ: Không được phép tìm kiếm ảnh so sánh với từ khóa null hoặc rỗng")
     void searchByPatientCode_NullOrEmptyKeyword_ThrowsException() {
-        // Thực tế Service không kiểm tra từ khóa null/rỗng nên test case này sẽ FAIL
         assertThrows(IllegalArgumentException.class, () -> 
             compareImagesService.searchByPatientCode(null),
             "Từ khóa null/rỗng phải ném ra IllegalArgumentException"

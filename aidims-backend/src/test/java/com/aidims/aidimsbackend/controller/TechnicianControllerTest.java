@@ -44,10 +44,6 @@ class TechnicianControllerTest {
         objectMapper = new ObjectMapper();
     }
 
-    // =========================================================
-    // 1. TEST VALIDATION - FILE RỖNG
-    // =========================================================
-
     @Nested
     @DisplayName("Import DICOM - File Validation")
     class FileValidationTests {
@@ -71,7 +67,7 @@ class TechnicianControllerTest {
                     .param("technical_params", "{\"kVp\":\"120\"}")
                     .param("notes", "Test")
                     .param("performed_by", "7"))
-                    .andExpect(status().isBadRequest()); // ← Nếu trả về 200 → BUG
+                    .andExpect(status().isBadRequest());
         }
 
         @Test
@@ -93,7 +89,7 @@ class TechnicianControllerTest {
                     .param("technical_params", "{\"kVp\":\"120\"}")
                     .param("notes", "Test")
                     .param("performed_by", "7"))
-                    .andExpect(status().isBadRequest()); // ← Nếu trả về 200 → BUG
+                    .andExpect(status().isBadRequest());
         }
 
         @Test
@@ -114,7 +110,7 @@ class TechnicianControllerTest {
                     .param("technical_params", "{\"kVp\":\"120\"}")
                     .param("notes", "Test")
                     .param("performed_by", "7"))
-                    .andExpect(status().isBadRequest()); // ← Nếu trả về 200 → BUG
+                    .andExpect(status().isBadRequest());
         }
 
         @Test
@@ -135,7 +131,7 @@ class TechnicianControllerTest {
                     .param("technical_params", "{\"kVp\":\"120\"}")
                     .param("notes", "Test")
                     .param("performed_by", "7"))
-                    .andExpect(status().isBadRequest()); // ← Nếu trả về 200 → BUG
+                    .andExpect(status().isBadRequest());
         }
 
         @Test
@@ -149,13 +145,9 @@ class TechnicianControllerTest {
                     .param("technical_params", "{\"kVp\":\"120\"}")
                     .param("notes", "Test")
                     .param("performed_by", "7"))
-                    .andExpect(status().isBadRequest()); // ← Nếu trả về 200 → BUG
+                    .andExpect(status().isBadRequest());
         }
     }
-
-    // =========================================================
-    // 2. TEST BVA - FILE QUÁ LỚN
-    // =========================================================
 
     @Nested
     @DisplayName("Import DICOM - Boundary Value Analysis")
@@ -181,7 +173,7 @@ class TechnicianControllerTest {
                     .param("technical_params", "{\"kVp\":\"120\"}")
                     .param("notes", "Test")
                     .param("performed_by", "7"))
-                    .andExpect(status().isBadRequest()); // ← Nếu trả về 200 → BUG
+                    .andExpect(status().isBadRequest());
         }
     }
 }

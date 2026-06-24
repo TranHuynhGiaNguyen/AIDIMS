@@ -40,7 +40,6 @@ class DicomConverterServiceTest {
     @Test
     @DisplayName("❌ convert - Ném ngoại lệ khi tệp DICOM bị lỗi định dạng hoặc bị cắt cụt")
     void convert_InvalidOrTruncatedDicom_ThrowsException() {
-        // Tệp DICOM có header tối thiểu nhưng không có pixel data
         assertThrows(Exception.class, () -> dicomConverterService.convert(minimalDicomHeader));
     }
 
@@ -53,8 +52,6 @@ class DicomConverterServiceTest {
     @Test
     @DisplayName("❌ Lỗi nghiệp vụ: Ném ngoại lệ nghiệp vụ cụ thể khi truyền mảng byte null thay vì NullPointerException")
     void convert_NullBytes_ThrowsIllegalArgumentException() {
-        // Thực tế code sẽ ném ra NullPointerException do ByteArrayInputStream không nhận null.
-        // Test mong đợi ném ra IllegalArgumentException với thông điệp rõ ràng, dẫn đến test này FAIL.
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, 
             () -> dicomConverterService.convert(null),
             "Ném IllegalArgumentException khi đầu vào null"

@@ -35,11 +35,9 @@ class ChatServiceTest {
     @Test
     @DisplayName("✅ getChatResponse - Hoạt động bình thường với cơ chế Fallback nội bộ khi không có API key thực")
     void getChatResponse_FallbackSuccess() {
-        // Tắt API keys để ép chạy vào fallback logic
         ReflectionTestUtils.setField(chatService, "geminiApiKey", "");
         ReflectionTestUtils.setField(chatService, "openaiApiKey", "");
 
-        // Gọi với triệu chứng tim mạch
         String response = chatService.getChatResponse("đau ngực và khó thở");
 
         assertNotNull(response);
@@ -98,7 +96,6 @@ class ChatServiceTest {
         req.setImages(new ArrayList<>());
         req.setMessage("Phân tích");
 
-        // Thực tế Service không kiểm tra danh sách rỗng trước khi xử lý, dẫn đến test này bị FAIL
         assertThrows(IllegalArgumentException.class, () -> chatService.analyzeImages(req),
             "Danh sách ảnh trống phải ném ra IllegalArgumentException"
         );

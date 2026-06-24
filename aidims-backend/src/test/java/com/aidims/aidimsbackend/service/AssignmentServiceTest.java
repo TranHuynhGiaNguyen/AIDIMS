@@ -119,10 +119,8 @@ class AssignmentServiceTest {
     @DisplayName("❌ Lỗi nghiệp vụ: Không được phép phân công bác sĩ vào chuyên khoa khác với chuyên khoa của họ")
     void assignDoctor_DepartmentMismatch_ThrowsException() {
         when(patientRepo.findById(1L)).thenReturn(Optional.of(samplePatient));
-        when(doctorRepo.findById(2L)).thenReturn(Optional.of(sampleDoctor)); // Bác sĩ thuộc khoa Cardiology
+        when(doctorRepo.findById(2L)).thenReturn(Optional.of(sampleDoctor));
 
-        // Cố gắng phân công bác sĩ (khoa Cardiology) vào khoa Pediatrics
-        // Thực tế Service không kiểm tra nên test này sẽ FAIL
         assertThrows(IllegalArgumentException.class, () -> 
             assignmentService.assignDoctor(1L, 2L, "Pediatrics"),
             "Chuyên khoa không khớp phải ném ra IllegalArgumentException"
