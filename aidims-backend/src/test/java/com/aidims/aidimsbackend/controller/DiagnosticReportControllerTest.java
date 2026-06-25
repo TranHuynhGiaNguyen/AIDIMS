@@ -3,129 +3,277 @@ package com.aidims.aidimsbackend.controller;
 import com.aidims.aidimsbackend.entity.DiagnosticReport;
 import com.aidims.aidimsbackend.service.DiagnosticReportService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(DiagnosticReportController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class DiagnosticReportControllerTest {
 
+    @Autowired
     private MockMvc mockMvc;
 
-    @Mock
+    @MockBean
     private DiagnosticReportService diagnosticReportService;
 
-    @InjectMocks
-    private DiagnosticReportController diagnosticReportController;
+    @Autowired
+    private ObjectMapper objectMapper;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private DiagnosticReport createSampleReport() {
+        DiagnosticReport report = new DiagnosticReport();
 
-    @BeforeEach
-    void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(diagnosticReportController).build();
+        report.setReportId(1);
+        report.setResultId(100);
+        report.setReportCode("BC20260707001");
+        report.setFindings("Normal findings");
+        report.setImpression("Normal impression");
+        report.setRecommendations("No recommendations");
+        report.setReportType(DiagnosticReport.ReportType.SoBo);
+        report.setStatus(DiagnosticReport.ReportStatus.BanNhap);
+        report.setRadiologistId(1);
+        report.setDictatedAt(LocalDateTime.now());
+
+        report.setReferringDoctorName("Dr Test");
+        report.setReferringDoctorSpecialty("Radiology");
+
+        return report;
     }
 
     @Test
-    void testEndpoint_returnsSuccess() throws Exception {
+    void test_shouldReturnOk() throws Exception {
+
         mockMvc.perform(get("/api/diagnostic-reports/test"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").value("API is working!"));
+                .andExpect(content().string("API is working!"));
     }
 
     @Test
-    void getReportById_whenReportExists_returnsReport() throws Exception {
-        DiagnosticReport report = new DiagnosticReport();
-        report.setReportId(1);
-        report.setReportCode("BC20260616001");
-        report.setFindings("Findings detail");
-        report.setImpression("Impression detail");
-        report.setReportType(DiagnosticReport.ReportType.ChinhThuc);
-        report.setStatus(DiagnosticReport.ReportStatus.HoanThanh);
+    void handleOptions_shouldReturnOk() throws Exception {
 
-        Mockito.when(diagnosticReportService.getReportById(1)).thenReturn(Optional.of(report));
-
-        mockMvc.perform(get("/api/diagnostic-reports/{id}", 1))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Lấy báo cáo thành công"))
-                .andExpect(jsonPath("$.data.reportId").value(1))
-                .andExpect(jsonPath("$.data.reportCode").value("BC20260616001"));
+        mockMvc.perform(options("/api/diagnostic-reports"))
+                .andExpect(status().isOk());
     }
 
     @Test
-    void getReportById_whenReportDoesNotExist_returnsNotFound() throws Exception {
-        Mockito.when(diagnosticReportService.getReportById(999)).thenReturn(Optional.empty());
+    void createReport_shouldReturnCreated() throws Exception {
 
-        mockMvc.perform(get("/api/diagnostic-reports/{id}", 999))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Không tìm thấy báo cáo với ID: 999"));
-    }
+        DiagnosticReport report = createSampleReport();
 
-    @Test
-    void createReport_withValidData_returnsCreated() throws Exception {
-        DiagnosticReport inputReport = new DiagnosticReport();
-        inputReport.setResultId(1);
-        inputReport.setReportCode("BC20260616001");
-        inputReport.setFindings("Normal findings");
-        inputReport.setImpression("Normal impression");
-        inputReport.setReportType(DiagnosticReport.ReportType.ChinhThuc);
-        inputReport.setRadiologistId(4);
-        inputReport.setStatus(DiagnosticReport.ReportStatus.HoanThanh);
-
-        DiagnosticReport savedReport = new DiagnosticReport();
-        savedReport.setReportId(123);
-        savedReport.setResultId(1);
-        savedReport.setReportCode("BC20260616001");
-        savedReport.setFindings("Normal findings");
-        savedReport.setImpression("Normal impression");
-        savedReport.setReportType(DiagnosticReport.ReportType.ChinhThuc);
-        savedReport.setRadiologistId(4);
-        savedReport.setStatus(DiagnosticReport.ReportStatus.HoanThanh);
-
-        Mockito.when(diagnosticReportService.createReport(any(DiagnosticReport.class))).thenReturn(savedReport);
+        when(diagnosticReportService.createReport(any(DiagnosticReport.class)))
+                .thenReturn(report);
 
         mockMvc.perform(post("/api/diagnostic-reports")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(inputReport)))
+                        .content(objectMapper.writeValueAsString(report)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Báo cáo chẩn đoán đã được tạo thành công"))
-                .andExpect(jsonPath("$.data.reportId").value(123))
-                .andExpect(jsonPath("$.data.reportCode").value("BC20260616001"));
+                .andExpect(jsonPath("$.data.reportCode")
+                        .value("BC20260707001"));
     }
 
     @Test
-    void createReport_withServiceException_returnsBadRequest() throws Exception {
-        DiagnosticReport inputReport = new DiagnosticReport();
-        inputReport.setResultId(1);
-        inputReport.setReportCode("BC20260616001");
-        inputReport.setFindings("Normal findings");
-        inputReport.setImpression("Normal impression");
+    void createReport_whenException_shouldReturnBadRequest() throws Exception {
 
-        Mockito.when(diagnosticReportService.createReport(any(DiagnosticReport.class)))
-                .thenThrow(new RuntimeException("Report code already exists: BC20260616001"));
+        DiagnosticReport report = createSampleReport();
+
+        when(diagnosticReportService.createReport(any(DiagnosticReport.class)))
+                .thenThrow(new RuntimeException("Database error"));
 
         mockMvc.perform(post("/api/diagnostic-reports")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(inputReport)))
+                        .content(objectMapper.writeValueAsString(report)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Lỗi khi tạo báo cáo: Report code already exists: BC20260616001"));
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    void createReportAlternative_shouldReturnCreated() throws Exception {
+
+        DiagnosticReport report = createSampleReport();
+
+        when(diagnosticReportService.createReport(any(DiagnosticReport.class)))
+                .thenReturn(report);
+
+        mockMvc.perform(post("/api/diagnostic-reports/create")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(report)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success").value(true));
+    }
+
+    @Test
+    void debugPost_shouldReturnOk() throws Exception {
+
+        mockMvc.perform(post("/api/diagnostic-reports/test-post"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("POST endpoint is working!"));
+    }
+
+    @Test
+    void getAllReports_shouldReturnOk() throws Exception {
+
+        DiagnosticReport report = createSampleReport();
+
+        when(diagnosticReportService.getAllReports())
+                .thenReturn(List.of(report));
+
+        mockMvc.perform(get("/api/diagnostic-reports"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data[0].reportCode")
+                        .value("BC20260707001"));
+    }
+
+    @Test
+    void getAllReports_whenException_shouldReturnInternalServerError()
+            throws Exception {
+
+        when(diagnosticReportService.getAllReports())
+                .thenThrow(new RuntimeException("Database error"));
+
+        mockMvc.perform(get("/api/diagnostic-reports"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    void getReportById_whenFound_shouldReturnOk() throws Exception {
+
+        DiagnosticReport report = createSampleReport();
+
+        when(diagnosticReportService.getReportById(1))
+                .thenReturn(Optional.of(report));
+
+        mockMvc.perform(get("/api/diagnostic-reports/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.reportCode")
+                        .value("BC20260707001"));
+    }
+
+    @Test
+    void getReportById_whenNotFound_shouldReturnNotFound()
+            throws Exception {
+
+        when(diagnosticReportService.getReportById(1))
+                .thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/diagnostic-reports/1"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    void getReportById_whenException_shouldReturnInternalServerError()
+            throws Exception {
+
+        when(diagnosticReportService.getReportById(1))
+                .thenThrow(new RuntimeException("Database error"));
+
+        mockMvc.perform(get("/api/diagnostic-reports/1"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    void getReportStatistics_shouldReturnOk() throws Exception {
+
+        DiagnosticReportService.ReportStatistics stats =
+                new DiagnosticReportService.ReportStatistics(
+                        10,
+                        4,
+                        6
+                );
+
+        when(diagnosticReportService.getReportStatistics())
+                .thenReturn(stats);
+
+        mockMvc.perform(get("/api/diagnostic-reports/statistics"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.totalReports").value(10))
+                .andExpect(jsonPath("$.data.draftReports").value(4))
+                .andExpect(jsonPath("$.data.completedReports").value(6));
+    }
+
+    @Test
+    void getReportStatistics_whenException_shouldReturnInternalServerError()
+            throws Exception {
+
+        when(diagnosticReportService.getReportStatistics())
+                .thenThrow(new RuntimeException("Statistics error"));
+
+        mockMvc.perform(get("/api/diagnostic-reports/statistics"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    void generateReportCode_shouldReturnOk() throws Exception {
+
+        when(diagnosticReportService.generateReportCode())
+                .thenReturn("BC20260707001");
+
+        mockMvc.perform(get("/api/diagnostic-reports/generate-code"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data")
+                        .value("BC20260707001"));
+    }
+
+    @Test
+    void generateReportCode_whenException_shouldReturnInternalServerError()
+            throws Exception {
+
+        when(diagnosticReportService.generateReportCode())
+                .thenThrow(new RuntimeException("Code generation error"));
+
+        mockMvc.perform(get("/api/diagnostic-reports/generate-code"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    void generateReportCodePost_shouldReturnOk() throws Exception {
+
+        when(diagnosticReportService.generateReportCode())
+                .thenReturn("BC20260707001");
+
+        mockMvc.perform(post("/api/diagnostic-reports/generate-code"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data")
+                        .value("BC20260707001"));
+    }
+
+    @Test
+    void generateReportCodePost_whenException_shouldReturnInternalServerError()
+            throws Exception {
+
+        when(diagnosticReportService.generateReportCode())
+                .thenThrow(new RuntimeException("Code generation error"));
+
+        mockMvc.perform(post("/api/diagnostic-reports/generate-code"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.success").value(false));
     }
 }

@@ -1,58 +1,87 @@
 package com.aidims.aidimsbackend.controller;
 
 import com.aidims.aidimsbackend.service.CompareImagesService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.hamcrest.Matchers.containsString;
+import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(MockitoExtension.class)
-@DisplayName("CompareImagesControllerTest - Mã hóa URL hình ảnh")
+@WebMvcTest(CompareImagesController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class CompareImagesControllerTest {
 
+    @Autowired
     private MockMvc mockMvc;
 
-    @Mock
+    @MockBean
     private CompareImagesService compareImagesService;
 
-    @InjectMocks
-    private CompareImagesController compareImagesController;
+    @Test
+    void testEndpoint_shouldReturnOk() throws Exception {
 
-    @BeforeEach
-    void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(compareImagesController).build();
+        mockMvc.perform(get("/api/compare-images/test"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("✅ CompareImages API is active."));
     }
 
     @Test
-    @DisplayName("⚠️ Lỗi nghiệp vụ: Đường dẫn imageUrl chứa tên file có khoảng trắng phải được mã hóa URL thành %20")
-    void searchPatientImages_shouldReturnUrlEncodedImageLinks() throws Exception {
-        List<Map<String, Object>> mockImages = new ArrayList<>();
-        Map<String, Object> img = new HashMap<>();
-        img.put("id", 1L);
-        img.put("fileName", "chest scan.dcm");
-        img.put("imageUrl", "http://localhost:8080/api/dicom-viewer/image/chest scan.dcm");
-        mockImages.add(img);
+    void searchPatientImages_shouldReturnImages() throws Exception {
 
-        Mockito.when(compareImagesService.searchByPatientCode(anyString())).thenReturn(mockImages);
+        Map<String, Object> image = new HashMap<>();
+        image.put("imageUrl", "uploads/test image.dcm");
+        image.put("patientCode", "BN001");
+
+        when(compareImagesService.searchByPatientCode("BN001"))
+                .thenReturn(List.of(image));
 
         mockMvc.perform(get("/api/compare-images/search")
-                        .param("keyword", "BN001"))
-                .andExpect(jsonPath("$[0].imageUrl", containsString("chest%20scan.dcm")));
+                .param("keyword", "BN001"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].patientCode").value("BN001"))
+                .andExpect(jsonPath("$[0].imageUrl")
+                        .value("uploads/test%20image.dcm"));
+    }
+
+    @Test
+    void searchPatientImages_withEmptyResult_shouldReturnOk() throws Exception {
+
+        when(compareImagesService.searchByPatientCode("NOT_FOUND"))
+                .thenReturn(List.of());
+
+        mockMvc.perform(get("/api/compare-images/search")
+                .param("keyword", "NOT_FOUND"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
+    }
+
+    @Test
+    void searchPatientImages_whenServiceThrowsException_shouldReturnInternalServerError()
+            throws Exception {
+
+        when(compareImagesService.searchByPatientCode(anyString()))
+                .thenThrow(new RuntimeException("Database error"));
+
+        mockMvc.perform(get("/api/compare-images/search")
+                .param("keyword", "BN001"))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void searchPatientImages_withoutKeyword_shouldReturnBadRequest()
+            throws Exception {
+
+        mockMvc.perform(get("/api/compare-images/search"))
+                .andExpect(status().isBadRequest());
     }
 }
