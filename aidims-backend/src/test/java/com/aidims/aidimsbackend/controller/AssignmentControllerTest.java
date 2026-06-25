@@ -99,8 +99,8 @@ class AssignmentControllerTest {
                 anyLong(),
                 anyLong(),
                 anyString(),
-                anyString(),
-                anyString()))
+                any(),
+                any()))
                 .thenThrow(new IllegalArgumentException("Invalid assignment"));
 
         mockMvc.perform(post("/api/receptionist/assign")
