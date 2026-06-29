@@ -106,7 +106,7 @@ function parseFrontendUtFailures(error) {
 console.log(' Bước 0: Đang chạy Unit Tests...');
 try {
     console.log(' - Đang chạy Backend Unit Tests...');
-    const mvnCmd = process.platform === 'win32' ? 'mvnw.cmd test' : './mvnw test';
+    const mvnCmd = process.platform === 'win32' ? 'mvnw.cmd clean test' : './mvnw clean test';
     const output = execSync(mvnCmd, { cwd: './aidims-backend', stdio: 'pipe' });
     console.log(output.toString());
     console.log(' - Backend Unit Tests: PASS.');

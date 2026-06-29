@@ -1,5 +1,6 @@
-package com.aidims.aidimsbackend.controller;
+package com.aidims.aidimsbackend.doctor.controller;
 
+import com.aidims.aidimsbackend.controller.CompareImagesController;
 import com.aidims.aidimsbackend.service.CompareImagesService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +30,6 @@ class CompareImagesControllerTest {
 
     @Test
     void testEndpoint_shouldReturnOk() throws Exception {
-
         mockMvc.perform(get("/api/compare-images/test"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("✅ CompareImages API is active."));
@@ -37,7 +37,6 @@ class CompareImagesControllerTest {
 
     @Test
     void searchPatientImages_shouldReturnImages() throws Exception {
-
         Map<String, Object> image = new HashMap<>();
         image.put("imageUrl", "uploads/test image.dcm");
         image.put("patientCode", "BN001");
@@ -49,13 +48,11 @@ class CompareImagesControllerTest {
                 .param("keyword", "BN001"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].patientCode").value("BN001"))
-                .andExpect(jsonPath("$[0].imageUrl")
-                        .value("uploads/test%20image.dcm"));
+                .andExpect(jsonPath("$[0].imageUrl").value("uploads/test%20image.dcm"));
     }
 
     @Test
     void searchPatientImages_withEmptyResult_shouldReturnOk() throws Exception {
-
         when(compareImagesService.searchByPatientCode("NOT_FOUND"))
                 .thenReturn(List.of());
 
@@ -66,9 +63,7 @@ class CompareImagesControllerTest {
     }
 
     @Test
-    void searchPatientImages_whenServiceThrowsException_shouldReturnInternalServerError()
-            throws Exception {
-
+    void searchPatientImages_whenServiceThrowsException_shouldReturnInternalServerError() throws Exception {
         when(compareImagesService.searchByPatientCode(anyString()))
                 .thenThrow(new RuntimeException("Database error"));
 
@@ -78,9 +73,7 @@ class CompareImagesControllerTest {
     }
 
     @Test
-    void searchPatientImages_withoutKeyword_shouldReturnBadRequest()
-            throws Exception {
-
+    void searchPatientImages_withoutKeyword_shouldReturnBadRequest() throws Exception {
         mockMvc.perform(get("/api/compare-images/search"))
                 .andExpect(status().isBadRequest());
     }

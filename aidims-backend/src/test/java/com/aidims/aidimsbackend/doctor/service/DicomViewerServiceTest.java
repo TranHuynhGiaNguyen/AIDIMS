@@ -1,5 +1,6 @@
-package com.aidims.aidimsbackend.service;
+package com.aidims.aidimsbackend.doctor.service;
 
+import com.aidims.aidimsbackend.service.DicomViewerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,8 +23,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("DicomViewerService - Unit Tests")
-class DicomViewerServiceTest {
+@DisplayName("DicomViewerService - White Box & Unit Tests (Doctor Role)")
+public class DicomViewerServiceTest {
 
     @Mock
     private JdbcTemplate jdbcTemplate;
@@ -55,9 +56,13 @@ class DicomViewerServiceTest {
         sampleDicomRow.put("performed_by_name", "Dr. Alice");
     }
 
+    // =========================================================================
+    // 1. Tests for transformDicomViewerData (Branch & Condition Coverage)
+    // =========================================================================
+
     @Test
-    @DisplayName("✅ getAllDicomViewer - Trả về danh sách DICOM đã chuẩn hóa thành công")
-    void getAllDicomViewer_Success() {
+    @DisplayName("TC_B5_01 / TC_C5_03: transformDicomViewerData - All fields valid, LocalDateTime import date")
+    void transformDicomViewerData_AllFieldsValid_ShouldTransformSuccessfully() {
         List<Map<String, Object>> rows = new ArrayList<>();
         rows.add(sampleDicomRow);
 
@@ -68,10 +73,88 @@ class DicomViewerServiceTest {
         assertNotNull(result);
         assertEquals(1, result.size());
         Map<String, Object> record = result.get(0);
+        assertEquals(1L, record.get("id"));
         assertEquals("test_file.dcm", record.get("fileName"));
+        assertEquals("My notes", record.get("description"));
+        assertEquals("CT", record.get("modality"));
+        assertEquals("BN001", record.get("patientCode"));
+        assertEquals("imported", record.get("status"));
+        assertEquals("Dr. Alice", record.get("performedBy"));
+        assertEquals(2048L, record.get("fileSize"));
+        assertEquals("24/06/2026 11:00", record.get("dateTaken"));
         assertEquals("John Smith", record.get("fullName"));
         assertEquals("http://localhost:8080/api/dicom-viewer/image/test_file.dcm", record.get("imageUrl"));
     }
+
+    @Test
+    @DisplayName("TC_B5_02 / TC_C5_01: transformDicomViewerData - Null fields, fallback values used")
+    void transformDicomViewerData_NullFields_ShouldUseFallbacks() {
+        Map<String, Object> nullRow = new HashMap<>();
+        nullRow.put("id", 2L);
+        nullRow.put("file_name", null);
+        nullRow.put("file_path", "dicom_uploads/null_file.dcm");
+        nullRow.put("file_size", 0L);
+        nullRow.put("import_date", null);
+        nullRow.put("notes", null);
+        nullRow.put("patient_code", "PAT_002");
+        nullRow.put("performed_by", null);
+        nullRow.put("status", "pending");
+        nullRow.put("study_type", null);
+        nullRow.put("technical_params", null);
+        nullRow.put("patient_name", null);
+        nullRow.put("performed_by_name", null);
+
+        List<Map<String, Object>> rows = new ArrayList<>();
+        rows.add(nullRow);
+
+        when(jdbcTemplate.queryForList(anyString())).thenReturn(rows);
+
+        List<Map<String, Object>> result = dicomViewerService.getAllDicomViewer();
+
+        assertNotNull(result);
+        Map<String, Object> record = result.get(0);
+        assertEquals(2L, record.get("id"));
+        assertNull(record.get("fileName"));
+        assertEquals("Không có mô tả", record.get("description"));
+        assertEquals("N/A", record.get("modality"));
+        assertEquals("N/A", record.get("performedBy"));
+        assertEquals("N/A", record.get("dateTaken"));
+        assertEquals("Bệnh nhân PAT_002", record.get("fullName"));
+        assertNull(record.get("imageUrl"));
+    }
+
+    @Test
+    @DisplayName("TC_B5_03 / TC_C5_02: transformDicomViewerData - Empty strings, string import date, patient code null")
+    void transformDicomViewerData_EmptyStringsAndStringDate_ShouldHandleAndSave() {
+        Map<String, Object> emptyRow = new HashMap<>();
+        emptyRow.put("id", 3L);
+        emptyRow.put("file_name", "");
+        emptyRow.put("file_path", "dicom_uploads/empty_file.dcm");
+        emptyRow.put("import_date", "22/06/2026 10:00:00");
+        emptyRow.put("notes", null);
+        emptyRow.put("study_type", null);
+        emptyRow.put("body_part", null);
+        emptyRow.put("performed_by_name", null);
+        emptyRow.put("patient_name", "");
+        emptyRow.put("patient_code", null);
+
+        List<Map<String, Object>> rows = new ArrayList<>();
+        rows.add(emptyRow);
+
+        when(jdbcTemplate.queryForList(anyString())).thenReturn(rows);
+
+        List<Map<String, Object>> result = dicomViewerService.getAllDicomViewer();
+
+        assertNotNull(result);
+        Map<String, Object> record = result.get(0);
+        assertEquals("22/06/2026 10:00:00", record.get("dateTaken"));
+        assertEquals("Bệnh nhân N/A", record.get("fullName"));
+        assertNull(record.get("imageUrl"));
+    }
+
+    // =========================================================================
+    // 2. Original Service Tests
+    // =========================================================================
 
     @Test
     @DisplayName("✅ getDicomViewerById - Lấy chi tiết DICOM theo ID thành công")
