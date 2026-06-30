@@ -51,7 +51,7 @@ class DicomImportControllerTest {
         // ==================== LỚP HỢP LỆ (PASS) ====================
 
         @Test
-        @DisplayName("✅ TC1: Hợp lệ - File .dcm, đúng kích thước, đầy đủ metadata")
+        @DisplayName("TC1: Hop le - File .dcm, dung kich thuoc, day du metadata")
         void testImportDicom_ValidFile_Dcm() throws Exception {
             byte[] content = new byte[1024 * 1024];
             MockMultipartFile file = new MockMultipartFile(
@@ -81,7 +81,7 @@ class DicomImportControllerTest {
         }
 
         @Test
-        @DisplayName("✅ TC2: BVA - File size MIN (1 byte)")
+        @DisplayName("TC2: BVA - File size MIN (1 byte)")
         void testImportDicom_FileSize_Min() throws Exception {
             byte[] content = new byte[1];
             MockMultipartFile file = new MockMultipartFile(
@@ -107,7 +107,7 @@ class DicomImportControllerTest {
         }
 
         @Test
-        @DisplayName("✅ TC3: BVA - File size MAX (100MB)")
+        @DisplayName("TC3: BVA - File size MAX (100MB)")
         void testImportDicom_FileSize_Max() throws Exception {
             byte[] content = new byte[100 * 1024 * 1024];
             MockMultipartFile file = new MockMultipartFile(
@@ -133,7 +133,7 @@ class DicomImportControllerTest {
         }
 
         @Test
-        @DisplayName("✅ TC4: Hợp lệ - File .dicom extension")
+        @DisplayName("TC4: Hop le - File .dicom extension")
         void testImportDicom_ValidFile_DicomExtension() throws Exception {
             byte[] content = new byte[1024 * 1024];
             MockMultipartFile file = new MockMultipartFile(
@@ -159,7 +159,7 @@ class DicomImportControllerTest {
         }
 
         @Test
-        @DisplayName("✅ TC5: Hợp lệ - File .dc3 extension")
+        @DisplayName("TC5: Hop le - File .dc3 extension")
         void testImportDicom_ValidFile_Dc3Extension() throws Exception {
             byte[] content = new byte[1024 * 1024];
             MockMultipartFile file = new MockMultipartFile(
@@ -185,7 +185,7 @@ class DicomImportControllerTest {
         }
 
         @Test
-        @DisplayName("✅ TC6: Hợp lệ - File .dic extension")
+        @DisplayName("TC6: Hop le - File .dic extension")
         void testImportDicom_ValidFile_DicExtension() throws Exception {
             byte[] content = new byte[1024 * 1024];
             MockMultipartFile file = new MockMultipartFile(
@@ -213,7 +213,7 @@ class DicomImportControllerTest {
         // ==================== LỚP KHÔNG HỢP LỆ (FAIL - CÓ VALIDATION) ====================
 
         @Test
-        @DisplayName("❌ TC7: File null - Lớp không hợp lệ X1")
+        @DisplayName("TC7: File null - Lop khong hop le X1")
         void testImportDicom_FileNull() throws Exception {
             mockMvc.perform(multipart("/api/dicom-import/import")
                     .param("patient_code", "BN001")
@@ -229,7 +229,7 @@ class DicomImportControllerTest {
         }
 
         @Test
-        @DisplayName("❌ TC8: File rỗng - Lớp không hợp lệ X2, X8")
+        @DisplayName("TC8: File rong - Lop khong hop le X2, X8")
         void testImportDicom_EmptyFile() throws Exception {
             MockMultipartFile file = new MockMultipartFile(
                     "file",
@@ -254,7 +254,7 @@ class DicomImportControllerTest {
         }
 
         @Test
-        @DisplayName("❌ TC9: File quá lớn >100MB - Lớp không hợp lệ X9")
+        @DisplayName("TC9: File qua lon >100MB - Lop khong hop le X9")
         void testImportDicom_FileTooLarge() throws Exception {
             byte[] content = new byte[101 * 1024 * 1024];
             MockMultipartFile file = new MockMultipartFile(
@@ -277,7 +277,7 @@ class DicomImportControllerTest {
         }
 
         @Test
-        @DisplayName("❌ TC10: File .txt - Lớp không hợp lệ X3")
+        @DisplayName("TC10: File .txt - Lop khong hop le X3")
         void testImportDicom_InvalidExtension_Txt() throws Exception {
             MockMultipartFile file = new MockMultipartFile(
                     "file",
@@ -302,7 +302,7 @@ class DicomImportControllerTest {
         }
 
         @Test
-        @DisplayName("❌ TC11: File .jpg - Lớp không hợp lệ X4")
+        @DisplayName("TC11: File .jpg - Lop khong hop le X4")
         void testImportDicom_InvalidExtension_Jpg() throws Exception {
             MockMultipartFile file = new MockMultipartFile(
                     "file",
@@ -324,7 +324,7 @@ class DicomImportControllerTest {
         }
 
         @Test
-        @DisplayName("❌ TC12: Fake .dcm.exe - Lớp không hợp lệ X7")
+        @DisplayName("TC12: Fake .dcm.exe - Lop khong hop le X7")
         void testImportDicom_FakeDcmExeExtension() throws Exception {
             MockMultipartFile file = new MockMultipartFile(
                     "file",
@@ -348,7 +348,7 @@ class DicomImportControllerTest {
         // ==================== LỚP KHÔNG HỢP LỆ (ĐÃ FIX BUG - MONG ĐỢI 400) ====================
 
         @Test
-        @DisplayName("❌ TC13: patient_code null - Lớp không hợp lệ X10")
+        @DisplayName("TC13: patient_code null - Lop khong hop le X10")
         void testImportDicom_NullPatientCode() throws Exception {
             byte[] content = new byte[1024 * 1024];
             MockMultipartFile file = new MockMultipartFile(
@@ -372,7 +372,7 @@ class DicomImportControllerTest {
         }
 
         @Test
-        @DisplayName("❌ TC14: patient_code rỗng - ĐÃ FIX BUG, mong đợi 400")
+        @DisplayName("TC14: patient_code rong - DA FIX BUG, mong doi 400")
         void testImportDicom_EmptyPatientCode() throws Exception {
             byte[] content = new byte[1024 * 1024];
             MockMultipartFile file = new MockMultipartFile(
@@ -398,7 +398,7 @@ class DicomImportControllerTest {
         }
 
         @Test
-        @DisplayName("❌ TC15: study_type null - Lớp không hợp lệ X13")
+        @DisplayName("TC15: study_type null - Lop khong hop le X13")
         void testImportDicom_NullStudyType() throws Exception {
             byte[] content = new byte[1024 * 1024];
             MockMultipartFile file = new MockMultipartFile(
@@ -422,7 +422,7 @@ class DicomImportControllerTest {
         }
 
         @Test
-        @DisplayName("❌ TC16: study_type rỗng - ĐÃ FIX BUG, mong đợi 400")
+        @DisplayName("TC16: study_type rong - DA FIX BUG, mong doi 400")
         void testImportDicom_EmptyStudyType() throws Exception {
             byte[] content = new byte[1024 * 1024];
             MockMultipartFile file = new MockMultipartFile(
@@ -448,7 +448,7 @@ class DicomImportControllerTest {
         }
 
         @Test
-        @DisplayName("❌ TC17: patient_name null - Lớp không hợp lệ X15")
+        @DisplayName("TC17: patient_name null - Lop khong hop le X15")
         void testImportDicom_NullPatientName() throws Exception {
             byte[] content = new byte[1024 * 1024];
             MockMultipartFile file = new MockMultipartFile(
@@ -472,7 +472,7 @@ class DicomImportControllerTest {
         }
 
         @Test
-        @DisplayName("❌ TC18: body_part null - Lớp không hợp lệ X17")
+        @DisplayName("TC18: body_part null - Lop khong hop le X17")
         void testImportDicom_NullBodyPart() throws Exception {
             byte[] content = new byte[1024 * 1024];
             MockMultipartFile file = new MockMultipartFile(

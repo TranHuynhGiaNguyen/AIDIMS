@@ -50,7 +50,7 @@ class ReceptionistServiceTest {
     class SymptomTests {
 
         @Test
-        @DisplayName("❌ Empty symptom description should be rejected")
+        @DisplayName("Empty symptom description should be rejected")
         void testEmptyDescription() {
 
             Patient patient = new Patient();
@@ -65,7 +65,7 @@ class ReceptionistServiceTest {
         }
 
         @Test
-        @DisplayName("❌ Null symptom description should be rejected")
+        @DisplayName("Null symptom description should be rejected")
         void testNullDescription() {
 
             Patient patient = new Patient();
@@ -80,7 +80,7 @@ class ReceptionistServiceTest {
         }
 
         @Test
-        @DisplayName("❌ Non-existing patient should not record symptom")
+        @DisplayName("Non-existing patient should not record symptom")
         void testPatientNotFound() {
 
             when(patientRepo.findById(999L))
@@ -98,7 +98,7 @@ class ReceptionistServiceTest {
     class AssignDoctorTests {
 
         @Test
-        @DisplayName("❌ Empty department should be rejected")
+        @DisplayName("Empty department should be rejected")
         void testEmptyDepartment() {
 
             Patient patient = new Patient();
@@ -123,7 +123,7 @@ class ReceptionistServiceTest {
         }
 
         @Test
-        @DisplayName("❌ Invalid priority should be rejected")
+        @DisplayName("Invalid priority should be rejected")
         void testInvalidPriority() {
 
             Patient patient = new Patient();
@@ -148,7 +148,7 @@ class ReceptionistServiceTest {
         }
 
         @Test
-        @DisplayName("❌ Doctor not found")
+        @DisplayName("Doctor not found")
         void testDoctorNotFound() {
 
             Patient patient = new Patient();
@@ -177,7 +177,7 @@ class ReceptionistServiceTest {
     class PatientValidationTests {
 
         @Test
-        @DisplayName("❌ Future date of birth should be rejected")
+        @DisplayName("Future date of birth should be rejected")
         void testFutureDateOfBirth() {
 
             Patient patient = new Patient();
@@ -193,7 +193,7 @@ class ReceptionistServiceTest {
         }
 
         @Test
-        @DisplayName("❌ Age cannot be negative")
+        @DisplayName("Age cannot be negative")
         void testNegativeAgeBug() {
 
             Patient patient = new Patient();
@@ -207,7 +207,7 @@ class ReceptionistServiceTest {
         }
 
         @Test
-        @DisplayName("❌ Invalid date format should be rejected")
+        @DisplayName("Invalid date format should be rejected")
         void testInvalidDateFormat() {
 
             Patient patient = new Patient();
@@ -226,7 +226,7 @@ class ReceptionistServiceTest {
     class RepositoryTests {
 
         @Test
-        @DisplayName("❌ Invalid patient should not be saved")
+        @DisplayName("Invalid patient should not be saved")
         void testInvalidPatientNotSaved() {
 
             Patient patient = new Patient();

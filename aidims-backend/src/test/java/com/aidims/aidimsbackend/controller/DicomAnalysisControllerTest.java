@@ -56,7 +56,7 @@ class DicomAnalysisControllerTest {
     }
 
     @Test
-    @DisplayName("✅ File .dcm được chấp nhận")
+    @DisplayName("File .dcm duoc chap nhan")
     void testDcmExtension() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "scan.dcm", "application/octet-stream", fakeDicomContent
@@ -75,7 +75,7 @@ class DicomAnalysisControllerTest {
     }
 
     @Test
-    @DisplayName("✅ File .dicom được chấp nhận")
+    @DisplayName("File .dicom duoc chap nhan")
     void testDicomExtension() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "scan.dicom", "application/octet-stream", fakeDicomContent
@@ -93,7 +93,7 @@ class DicomAnalysisControllerTest {
     }
 
     @Test
-    @DisplayName("✅ File .dc3 được chấp nhận")
+    @DisplayName("File .dc3 duoc chap nhan")
     void testDc3Extension() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "scan.dc3", "application/octet-stream", fakeDicomContent
@@ -111,7 +111,7 @@ class DicomAnalysisControllerTest {
     }
 
     @Test
-    @DisplayName("✅ File .dic được chấp nhận")
+    @DisplayName("File .dic duoc chap nhan")
     void testDicExtension() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "scan.dic", "application/octet-stream", fakeDicomContent
@@ -129,7 +129,7 @@ class DicomAnalysisControllerTest {
     }
 
     @Test
-    @DisplayName("✅ File không có đuôi (từ PACS) được chấp nhận")
+    @DisplayName("File khong co duoi (tu PACS) duoc chap nhan")
     void testBlankExtension() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "IM000001", "application/octet-stream", fakeDicomContent
@@ -147,7 +147,7 @@ class DicomAnalysisControllerTest {
     }
 
     @Test
-    @DisplayName("✅ File .DCM (chữ hoa) được chấp nhận")
+    @DisplayName("File .DCM (chu hoa) duoc chap nhan")
     void testUpperCaseExtension() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "SCAN.DCM", "application/octet-stream", fakeDicomContent
@@ -165,7 +165,7 @@ class DicomAnalysisControllerTest {
     }
 
     @Test
-    @DisplayName("❌ File .txt bị từ chối, không gọi service")
+    @DisplayName("File .txt bi tu choi, khong goi service")
     void testTxtExtension() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "document.txt", "text/plain", "content".getBytes()
@@ -181,7 +181,7 @@ class DicomAnalysisControllerTest {
     }
 
     @Test
-    @DisplayName("❌ File .jpg bị từ chối, không gọi service")
+    @DisplayName("File .jpg bi tu choi, khong goi service")
     void testJpgExtension() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "image.jpg", "image/jpeg", "image".getBytes()
@@ -197,7 +197,7 @@ class DicomAnalysisControllerTest {
     }
 
     @Test
-    @DisplayName("❌ File .dcm.exe (giả mạo) bị từ chối, không gọi service")
+    @DisplayName("File .dcm.exe (gia mao) bi tu choi, khong goi service")
     void testFakeDicomExtension() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "virus.dcm.exe", "application/octet-stream", "exe".getBytes()
@@ -213,7 +213,7 @@ class DicomAnalysisControllerTest {
     }
 
     @Test
-    @DisplayName("❌ File rỗng bị từ chối, không gọi service")
+    @DisplayName("File rong bi tu choi, khong goi service")
     void testEmptyFile() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "empty.dcm", "application/octet-stream", new byte[0]
@@ -230,7 +230,7 @@ class DicomAnalysisControllerTest {
     }
 
     @Test
-    @DisplayName("❌ File quá lớn (>100MB) bị từ chối, không gọi service")
+    @DisplayName("File qua lon (>100MB) bi tu choi, khong goi service")
     void testFileTooLarge() throws Exception {
         MockMultipartFile file = Mockito.mock(MockMultipartFile.class);
         when(file.isEmpty()).thenReturn(false);
@@ -248,7 +248,7 @@ class DicomAnalysisControllerTest {
     }
 
     @Test
-    @DisplayName("⚠️ DicomConverterService ném exception → controller fallback trả về 200")
+    @DisplayName("DicomConverterService nem exception - controller fallback tra ve 200")
     void testConvertException_fallback() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "scan.dcm", "application/octet-stream", fakeDicomContent
@@ -269,7 +269,7 @@ class DicomAnalysisControllerTest {
     }
 
     @Test
-    @DisplayName("⚠️ ChatService ném exception → controller fallback")
+    @DisplayName("ChatService nem exception - controller fallback")
     void testChatServiceException_fallback() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "scan.dcm", "application/octet-stream", fakeDicomContent

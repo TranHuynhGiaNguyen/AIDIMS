@@ -170,7 +170,7 @@ public class RequestPhotoServiceTest {
     // =========================================================================
 
     @Test
-    @DisplayName("✅ getAllRequests - Success")
+    @DisplayName("getAllRequests - Success")
     void getAllRequests_Success() {
         when(requestPhotoRepository.findAll()).thenReturn(Arrays.asList(sampleEntity));
 
@@ -182,7 +182,7 @@ public class RequestPhotoServiceTest {
     }
 
     @Test
-    @DisplayName("✅ getRequestsByPatientId - Success")
+    @DisplayName("getRequestsByPatientId - Success")
     void getRequestsByPatientId_Success() {
         when(requestPhotoRepository.findByPatientIdOrderByCreatedAtDesc(10L))
                 .thenReturn(Arrays.asList(sampleEntity));
@@ -195,7 +195,7 @@ public class RequestPhotoServiceTest {
     }
 
     @Test
-    @DisplayName("❌ Lỗi nghiệp vụ: Service không được phép tạo yêu cầu chụp phim với ngày chỉ định trong quá khứ")
+    @DisplayName("Loi nghiep vu: Service khong duoc phep tao yeu cau chup phim voi ngay chi dinh trong qua khu")
     void createRequest_withPastDate_shouldThrowException() {
         sampleDTO.setRequestDate(LocalDate.now().minusDays(10));
 

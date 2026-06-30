@@ -42,7 +42,7 @@ class VerifyImageServiceTest {
     }
 
     @Test
-    @DisplayName("✅ saveVerifyImage - Lưu thông tin phê duyệt ảnh thành công")
+    @DisplayName("saveVerifyImage - Luu thong tin phe duyet anh thanh cong")
     void saveVerifyImage_Success() {
         when(verifyImageRepo.save(any(VerifyImage.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -56,7 +56,7 @@ class VerifyImageServiceTest {
     }
 
     @Test
-    @DisplayName("✅ getAllVerifyImages - Lấy danh sách toàn bộ phê duyệt ảnh thành công")
+    @DisplayName("getAllVerifyImages - Lay danh sach toan bo phe duyet anh thanh cong")
     void getAllVerifyImages_Success() {
         when(verifyImageRepo.findAll()).thenReturn(Arrays.asList(sampleVerify));
 
@@ -68,7 +68,7 @@ class VerifyImageServiceTest {
     }
 
     @Test
-    @DisplayName("✅ getVerifyImageById - Lấy chi tiết phê duyệt theo ID thành công")
+    @DisplayName("getVerifyImageById - Lay chi tiet phe duyet theo ID thanh cong")
     void getVerifyImageById_Found() {
         when(verifyImageRepo.findById(1L)).thenReturn(Optional.of(sampleVerify));
 
@@ -79,7 +79,7 @@ class VerifyImageServiceTest {
     }
 
     @Test
-    @DisplayName("❌ Lỗi nghiệp vụ: Không được phép lưu duyệt ảnh với kết quả không thuộc danh sách approved/rejected")
+    @DisplayName("Loi nghiep vu: Khong duoc phep luu duyet anh voi ket qua khong thuoc danh sach approved/rejected")
     void saveVerifyImage_InvalidResult_ThrowsException() {
         sampleVerify.setResult("unknown_status");
         assertThrows(IllegalArgumentException.class, () -> 

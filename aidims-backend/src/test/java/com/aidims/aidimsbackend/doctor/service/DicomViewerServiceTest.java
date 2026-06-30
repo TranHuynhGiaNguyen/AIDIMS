@@ -157,7 +157,7 @@ public class DicomViewerServiceTest {
     // =========================================================================
 
     @Test
-    @DisplayName("✅ getDicomViewerById - Lấy chi tiết DICOM theo ID thành công")
+    @DisplayName("getDicomViewerById - Lay chi tiet DICOM theo ID thanh cong")
     void getDicomViewerById_Found() {
         List<Map<String, Object>> rows = new ArrayList<>();
         rows.add(sampleDicomRow);
@@ -172,7 +172,7 @@ public class DicomViewerServiceTest {
     }
 
     @Test
-    @DisplayName("✅ getDicomViewerById - Trả về null khi không tìm thấy ID")
+    @DisplayName("getDicomViewerById - Tra ve null khi khong tim thay ID")
     void getDicomViewerById_NotFound() {
         when(jdbcTemplate.queryForList(anyString(), eq(999L))).thenReturn(new ArrayList<>());
 
@@ -182,7 +182,7 @@ public class DicomViewerServiceTest {
     }
 
     @Test
-    @DisplayName("✅ getDicomViewerByPatient - Lấy danh sách DICOM của bệnh nhân thành công")
+    @DisplayName("getDicomViewerByPatient - Lay danh sach DICOM cua benh nhan thanh cong")
     void getDicomViewerByPatient_Success() {
         List<Map<String, Object>> rows = new ArrayList<>();
         rows.add(sampleDicomRow);
@@ -197,7 +197,7 @@ public class DicomViewerServiceTest {
     }
 
     @Test
-    @DisplayName("✅ searchDicomViewer - Tìm kiếm DICOM theo từ khóa thành công")
+    @DisplayName("searchDicomViewer - Tim kiem DICOM theo tu khoa thanh cong")
     void searchDicomViewer_Success() {
         List<Map<String, Object>> rows = new ArrayList<>();
         rows.add(sampleDicomRow);
@@ -217,7 +217,7 @@ public class DicomViewerServiceTest {
     }
 
     @Test
-    @DisplayName("✅ getDicomViewerFilePath - Lấy đường dẫn tệp tin DICOM lưu trong DB thành công")
+    @DisplayName("getDicomViewerFilePath - Lay duong dan tep tin DICOM luu trong DB thanh cong")
     void getDicomViewerFilePath_Success() {
         List<Map<String, Object>> rows = new ArrayList<>();
         Map<String, Object> row = new HashMap<>();
@@ -232,7 +232,7 @@ public class DicomViewerServiceTest {
     }
 
     @Test
-    @DisplayName("✅ getDicomViewerStats - Thống kê chính xác số liệu lưu trữ DICOM")
+    @DisplayName("getDicomViewerStats - Thong ke chinh xac so lieu luu tru DICOM")
     void getDicomViewerStats_Success() {
         List<Map<String, Object>> rows = new ArrayList<>();
         Map<String, Object> statsRow = new HashMap<>();
@@ -255,7 +255,7 @@ public class DicomViewerServiceTest {
     }
 
     @Test
-    @DisplayName("❌ Lỗi nghiệp vụ: Đường dẫn imageUrl của DICOM Viewer chứa khoảng trắng phải được mã hóa URL thành %20 hoặc phù hợp")
+    @DisplayName("Loi nghiep vu: Duong dan imageUrl cua DICOM Viewer chua khoang trang phai duoc ma hoa URL thanh %20")
     void getAllDicomViewer_shouldUrlEncodeImageUrls() {
         List<Map<String, Object>> rows = new ArrayList<>();
         Map<String, Object> row = new HashMap<>(sampleDicomRow);

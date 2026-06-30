@@ -31,7 +31,7 @@ class DicomImportServiceTest {
     private DicomImportService dicomImportService;
 
     @Test
-    @DisplayName("❌ Không được lưu nếu patientCode rỗng")
+    @DisplayName("Khong duoc luu neu patientCode rong")
     void saveDicomImport_WithEmptyPatientCode_ShouldThrowException() {
         DicomImport dicom = new DicomImport();
         dicom.setPatientCode("");
@@ -44,7 +44,7 @@ class DicomImportServiceTest {
     }
 
     @Test
-    @DisplayName("❌ Không được lưu nếu tên file không hợp lệ")
+    @DisplayName("Khong duoc luu neu ten file khong hop le")
     void saveDicomImport_WithInvalidFileName_ShouldThrowException() {
         DicomImport dicom = new DicomImport();
         dicom.setPatientCode("BN001");
@@ -58,7 +58,7 @@ class DicomImportServiceTest {
     }
 
     @Test
-    @DisplayName("✅ Lưu thành công với dữ liệu hợp lệ")
+    @DisplayName("Luu thanh cong voi du lieu hop le")
     void saveDicomImport_WithValidData_ShouldSaveSuccessfully() {
         DicomImport dicom = new DicomImport();
         dicom.setPatientCode("BN001");
@@ -76,7 +76,7 @@ class DicomImportServiceTest {
     }
 
     @Test
-    @DisplayName("✅ saveDicomImport tự động gán importDate")
+    @DisplayName("saveDicomImport tu dong gan importDate")
     void saveDicomImport_ShouldSetImportDateAndSaveEntity() {
 
         DicomImport dicomImport = new DicomImport();

@@ -28,7 +28,7 @@ class AuthServiceTest {
     private AuthService authService;
 
     @Test
-    @DisplayName("❌ Lỗi nghiệp vụ: Đăng nhập sai vai trò yêu cầu phải thất bại (Đăng nhập chéo vai trò)")
+    @DisplayName("Loi nghiep vu: Dang nhap sai vai tro yeu cau phai that bai (Dang nhap cheo vai tro)")
     void login_IncorrectRole_ShouldFail() {
         User mockUser = new User();
         mockUser.setUsername("doctor_user");

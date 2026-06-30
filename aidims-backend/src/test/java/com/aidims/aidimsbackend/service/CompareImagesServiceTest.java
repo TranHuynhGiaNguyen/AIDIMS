@@ -37,7 +37,7 @@ class CompareImagesServiceTest {
     }
 
     @Test
-    @DisplayName("✅ searchByPatientCode - Ánh xạ và chuyển đổi dữ liệu dòng DB thành công")
+    @DisplayName("searchByPatientCode - Anh xa va chuyen doi du lieu dong DB thanh cong")
     void searchByPatientCode_Success() {
         List<Map<String, Object>> rawRows = new ArrayList<>();
         Map<String, Object> row = new HashMap<>();
@@ -81,7 +81,7 @@ class CompareImagesServiceTest {
     }
 
     @Test
-    @DisplayName("✅ searchByPatientCode - Tự gán tên mặc định khi thông tin tên bệnh nhân bị null trong DB")
+    @DisplayName("searchByPatientCode - Tu gan ten mac dinh khi thong tin ten benh nhan bi null trong DB")
     void searchByPatientCode_FallbackPatientName() {
         List<Map<String, Object>> rawRows = new ArrayList<>();
         Map<String, Object> row = new HashMap<>();
@@ -104,7 +104,7 @@ class CompareImagesServiceTest {
     }
 
     @Test
-    @DisplayName("❌ Lỗi nghiệp vụ: Không được phép tìm kiếm ảnh so sánh với từ khóa null hoặc rỗng")
+    @DisplayName("Loi nghiep vu: Khong duoc phep tim kiem anh so sanh voi tu khoa null hoac rong")
     void searchByPatientCode_NullOrEmptyKeyword_ThrowsException() {
         assertThrows(IllegalArgumentException.class, () -> 
             compareImagesService.searchByPatientCode(null),

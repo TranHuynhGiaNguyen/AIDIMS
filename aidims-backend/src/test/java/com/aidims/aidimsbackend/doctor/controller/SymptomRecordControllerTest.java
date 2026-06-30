@@ -1,49 +1,42 @@
 package com.aidims.aidimsbackend.controller;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
 import com.aidims.aidimsbackend.service.PatientService;
 import com.aidims.aidimsbackend.service.SymptomRecordService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 
-@ExtendWith(MockitoExtension.class)
-@DisplayName("SymptomRecordControllerTest - Giới hạn thang điểm đau")
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@WebMvcTest(SymptomRecordController.class)
+@AutoConfigureMockMvc(addFilters = false)
+@DisplayName("SymptomRecordController - Black Box & API Unit Tests (Receptionist Role)")
 class SymptomRecordControllerTest {
 
+    @Autowired
     private MockMvc mockMvc;
 
-    @Mock
+    @MockBean
     private SymptomRecordService symptomRecordService;
 
-    @Mock
+    @MockBean
     private PatientService patientService;
 
-    @InjectMocks
-    private SymptomRecordController symptomRecordController;
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
-    @BeforeEach
-    void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(symptomRecordController).build();
-    }
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Test
-    @DisplayName("❌ Lỗi nghiệp vụ: Thang điểm đau (Pain Scale) vượt quá phạm vi [0-10] phải bị từ chối")
+    @DisplayName("TC_BB_SYM_API_01: createSymptomRecord - Pain Scale exceeds range [0-10] should return 400 Bad Request")
     void createSymptomRecord_withInvalidPainScale_shouldReturnBadRequest() throws Exception {
         Map<String, Object> requestData = new HashMap<>();
         requestData.put("patient_id", "1");

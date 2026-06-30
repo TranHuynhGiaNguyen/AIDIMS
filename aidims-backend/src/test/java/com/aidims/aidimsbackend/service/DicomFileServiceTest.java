@@ -26,7 +26,7 @@ class DicomFileServiceTest {
     private final DicomFileService dicomFileService = new DicomFileService();
 
     @Test
-    @DisplayName("✅ copyFileToFrontend sao chép file sang thư mục frontend thực tế")
+    @DisplayName("copyFileToFrontend sao chep file sang thu muc frontend thuc te")
     void copyFileToFrontend_shouldCopyFileToFrontendDirectory() throws Exception {
         Path sourceFile = Files.createTempFile("source", ".dcm");
         Files.writeString(sourceFile, "dicom-content", StandardCharsets.UTF_8);
@@ -50,7 +50,7 @@ class DicomFileServiceTest {
     }
 
     @Test
-    @DisplayName("✅ saveAndCopyToFrontend lưu ở backend và copy sang frontend")
+    @DisplayName("saveAndCopyToFrontend luu o backend va copy sang frontend")
     void saveAndCopyToFrontend_shouldSaveAndCopyFile() throws Exception {
         MultipartFile file = mock(MultipartFile.class);
         when(file.getOriginalFilename()).thenReturn("scan_test.dcm");
@@ -88,7 +88,7 @@ class DicomFileServiceTest {
         }
     }
     @Test
-    @DisplayName("❌ Lỗi nghiệp vụ (Bug-CI): Chặn upload file rỗng (0 bytes)")
+    @DisplayName("Loi nghiep vu (Bug-CI): Chan upload file rong (0 bytes)")
     void saveAndCopyToFrontend_WithEmptyFile_ShouldThrowException() throws Exception {
         MultipartFile file = mock(MultipartFile.class);
         when(file.isEmpty()).thenReturn(true); 

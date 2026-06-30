@@ -32,7 +32,7 @@ class CompareImagesControllerTest {
     void testEndpoint_shouldReturnOk() throws Exception {
         mockMvc.perform(get("/api/compare-images/test"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("✅ CompareImages API is active."));
+                .andExpect(content().string("CompareImages API is active."));
     }
 
     @Test
