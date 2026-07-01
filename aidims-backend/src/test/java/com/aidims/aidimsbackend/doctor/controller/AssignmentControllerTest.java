@@ -1,4 +1,4 @@
-package com.aidims.aidimsbackend.controller;
+package com.aidims.aidimsbackend.doctor.controller;
 
 import com.aidims.aidimsbackend.entity.Assignment;
 import com.aidims.aidimsbackend.entity.Doctor;
@@ -23,6 +23,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.aidims.aidimsbackend.controller.AssignmentController;
 @WebMvcTest(AssignmentController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class AssignmentControllerTest {

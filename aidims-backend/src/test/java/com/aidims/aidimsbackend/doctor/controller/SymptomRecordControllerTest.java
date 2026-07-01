@@ -1,4 +1,4 @@
-package com.aidims.aidimsbackend.controller;
+package com.aidims.aidimsbackend.doctor.controller;
 
 import com.aidims.aidimsbackend.service.PatientService;
 import com.aidims.aidimsbackend.service.SymptomRecordService;
@@ -18,6 +18,7 @@ import java.util.Map;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.aidims.aidimsbackend.controller.SymptomRecordController;
 @WebMvcTest(SymptomRecordController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @DisplayName("SymptomRecordController - Black Box & API Unit Tests (Receptionist Role)")
