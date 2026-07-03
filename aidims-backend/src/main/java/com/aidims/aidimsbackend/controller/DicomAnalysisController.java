@@ -55,7 +55,7 @@ public class DicomAnalysisController {
         Set<String> validDicomExtensions = Set.of("dcm", "dicom", "dc3", "dic");
         if (hasExtension && !validDicomExtensions.contains(extension)) {
             return bad("Chỉ hỗ trợ file DICOM (.dcm, .dicom, .dc3, .dic) hoặc file không có đuôi (từ PACS)");
-}
+        }
 
         try {
             // ── 1. Convert DICOM → base64 JPEG + metadata ─────────────────

@@ -46,10 +46,15 @@ public class ReceptionistService {
         }
         
         // Validation: Độ ưu tiên không được rỗng VÀ phải đúng định dạng
-        if (priority == null || priority.trim().isEmpty() || 
-            (!priority.equalsIgnoreCase("Cao") && 
-             !priority.equalsIgnoreCase("Trung bình") && 
-             !priority.equalsIgnoreCase("Thấp"))) {
+        if (priority == null || priority.trim().isEmpty()) {
+            throw new IllegalArgumentException("Độ ưu tiên không hợp lệ!");
+        }
+        String pUpper = priority.trim().toUpperCase();
+        boolean isValid = pUpper.equals("CAO") || pUpper.equals("TRUNG BÌNH") || pUpper.equals("THẤP") ||
+                          pUpper.equals("KHẨN CẤP") || pUpper.equals("ƯU TIÊN") || pUpper.equals("BÌNH THƯỜNG") ||
+                          pUpper.equals("HIGH") || pUpper.equals("MEDIUM") || pUpper.equals("LOW") ||
+                          pUpper.equals("NORMAL") || pUpper.equals("URGENT") || pUpper.equals("STAT");
+        if (!isValid) {
             throw new IllegalArgumentException("Độ ưu tiên không hợp lệ!");
         }
 

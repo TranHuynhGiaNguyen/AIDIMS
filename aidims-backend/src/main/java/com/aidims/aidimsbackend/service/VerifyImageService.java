@@ -17,7 +17,9 @@ public class VerifyImageService {
 
     public VerifyImage saveVerifyImage(VerifyImage verifyImage) {
         String result = verifyImage.getResult();
-        if (result == null || (!result.equalsIgnoreCase("approved") && !result.equalsIgnoreCase("rejected"))) {
+        if (result == null || (!result.equalsIgnoreCase("approved") && 
+                               !result.equalsIgnoreCase("rejected") && 
+                               !result.equalsIgnoreCase("pending"))) {
             throw new IllegalArgumentException("Kết quả duyệt ảnh không hợp lệ!");
         }
         verifyImage.setCheckTime(LocalDateTime.now());
