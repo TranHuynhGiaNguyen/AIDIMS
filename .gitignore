@@ -1,3 +1,4 @@
 .env
 **/dicom_uploads/
 newman-report.json
+report.md
