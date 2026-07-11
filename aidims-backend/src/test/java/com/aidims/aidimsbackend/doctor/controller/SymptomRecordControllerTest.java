@@ -31,6 +31,9 @@ class SymptomRecordControllerTest {
     private SymptomRecordService symptomRecordService;
 
     @MockBean
+    private com.aidims.aidimsbackend.config.JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
     private PatientService patientService;
 
     @Autowired

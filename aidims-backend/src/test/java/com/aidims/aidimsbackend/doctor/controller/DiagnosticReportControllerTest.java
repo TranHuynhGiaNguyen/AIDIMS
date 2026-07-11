@@ -33,6 +33,9 @@ class DiagnosticReportControllerTest {
     @MockBean
     private DiagnosticReportService diagnosticReportService;
 
+    @MockBean
+    private com.aidims.aidimsbackend.config.JwtTokenProvider jwtTokenProvider;
+
     @Autowired
     private ObjectMapper objectMapper;
 

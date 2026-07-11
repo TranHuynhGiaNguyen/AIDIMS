@@ -11,12 +11,16 @@ import com.aidims.aidimsbackend.dto.LoginRequest;
 import com.aidims.aidimsbackend.dto.LoginResponse;
 import com.aidims.aidimsbackend.entity.User;
 import com.aidims.aidimsbackend.repository.UserRepository;
+import com.aidims.aidimsbackend.config.JwtTokenProvider;
 
 @Service
 public class AuthService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
 
     public LoginResponse login(LoginRequest request) {
         try {
@@ -51,6 +55,8 @@ public class AuthService {
                 return LoginResponse.error("Tài khoản không thuộc vai trò yêu cầu");
             }
             
+            String token = jwtTokenProvider.generateToken(user.getUsername(), user.getRole().getRoleName());
+
             // Tạo response
             Map<String, Object> userData = new HashMap<>();
             userData.put("userId", user.getUserId());
@@ -59,6 +65,7 @@ public class AuthService {
             userData.put("fullName", user.getFullName());
             userData.put("email", user.getEmail());
             userData.put("phone", user.getPhone());
+            userData.put("token", token);
             
             return LoginResponse.success(userData);
             

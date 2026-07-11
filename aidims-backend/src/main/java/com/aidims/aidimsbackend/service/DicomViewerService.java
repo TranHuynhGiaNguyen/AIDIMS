@@ -213,6 +213,7 @@ public class DicomViewerService {
             FROM dicom_imports 
             WHERE file_name = ? 
             AND status = 'imported'
+            ORDER BY id DESC
             LIMIT 1
             """;
 
@@ -324,5 +325,9 @@ public class DicomViewerService {
         if (fileName == null) return null;
         String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20");
         return "http://localhost:" + serverPort + "/api/dicom-viewer/image/" + encodedFileName;
+    }
+
+    public List<Map<String, Object>> dumpDicomImports() {
+        return jdbcTemplate.queryForList("SELECT id, file_name, file_path, status FROM dicom_imports");
     }
 }

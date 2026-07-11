@@ -31,6 +31,9 @@ class RequestPhotoControllerTest {
     @MockBean
     private RequestPhotoService requestPhotoService;
 
+    @MockBean
+    private com.aidims.aidimsbackend.config.JwtTokenProvider jwtTokenProvider;
+
     @Autowired
     private ObjectMapper objectMapper;
 

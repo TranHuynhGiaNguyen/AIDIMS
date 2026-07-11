@@ -5,6 +5,7 @@ import com.aidims.aidimsbackend.dto.LoginResponse;
 import com.aidims.aidimsbackend.entity.Role;
 import com.aidims.aidimsbackend.entity.User;
 import com.aidims.aidimsbackend.repository.UserRepository;
+import com.aidims.aidimsbackend.config.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -26,6 +27,9 @@ class AuthServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private JwtTokenProvider jwtTokenProvider;
 
     @InjectMocks
     private AuthService authService;
@@ -107,6 +111,7 @@ class AuthServiceTest {
         @DisplayName("TC1 - Dang nhap Doctor thanh cong")
         void tc1_Login_Doctor_Success() {
             when(userRepository.findByUsername("doctor_user")).thenReturn(Optional.of(mockDoctorUser));
+            when(jwtTokenProvider.generateToken(anyString(), anyString())).thenReturn("mocked_jwt_token");
 
             LoginRequest request = createRequest("doctor_user", "doctorPass", "doctor");
             LoginResponse response = authService.login(request);
@@ -121,6 +126,7 @@ class AuthServiceTest {
         @DisplayName("TC2 - Dang nhap Admin thanh cong")
         void tc2_Login_Admin_Success() {
             when(userRepository.findByUsername("admin_user")).thenReturn(Optional.of(mockAdminUser));
+            when(jwtTokenProvider.generateToken(anyString(), anyString())).thenReturn("mocked_jwt_token");
 
             LoginRequest request = createRequest("admin_user", "adminPass", "admin");
             LoginResponse response = authService.login(request);
@@ -133,6 +139,7 @@ class AuthServiceTest {
         @DisplayName("TC3 - Dang nhap Receptionist thanh cong")
         void tc3_Login_Receptionist_Success() {
             when(userRepository.findByUsername("rec_user")).thenReturn(Optional.of(mockReceptionistUser));
+            when(jwtTokenProvider.generateToken(anyString(), anyString())).thenReturn("mocked_jwt_token");
 
             LoginRequest request = createRequest("rec_user", "recPass", "receptionist");
             LoginResponse response = authService.login(request);
@@ -145,6 +152,7 @@ class AuthServiceTest {
         @DisplayName("TC4 - Dang nhap Technician thanh cong")
         void tc4_Login_Technician_Success() {
             when(userRepository.findByUsername("tech_user")).thenReturn(Optional.of(mockTechnicianUser));
+            when(jwtTokenProvider.generateToken(anyString(), anyString())).thenReturn("mocked_jwt_token");
 
             LoginRequest request = createRequest("tech_user", "techPass", "technician");
             LoginResponse response = authService.login(request);

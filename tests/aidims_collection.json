@@ -3,6 +3,16 @@
     "name": "AIDIMS API Tests",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
   "item": [
     {
       "name": "Auth - Login Validation - Empty Username",
@@ -174,6 +184,7 @@
               "    var jsonData = pm.response.json();",
               "    pm.expect(jsonData.status).to.eql(\"success\");",
               "    pm.expect(jsonData.data.username).to.eql(\"1\");",
+              "    pm.environment.set(\"jwt_token\", jsonData.data.token);",
               "});"
             ],
             "type": "text/javascript"

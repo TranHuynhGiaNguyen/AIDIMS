@@ -34,6 +34,9 @@ class AssignmentControllerTest {
     @MockBean
     private ReceptionistService receptionistService;
 
+    @MockBean
+    private com.aidims.aidimsbackend.config.JwtTokenProvider jwtTokenProvider;
+
     @Autowired
     private ObjectMapper objectMapper;
 

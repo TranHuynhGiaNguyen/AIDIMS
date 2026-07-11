@@ -79,7 +79,13 @@ public class DicomImportController {
         // ====== PHẦN CODE CŨ ======
         
         // Lưu file vào thư mục dicom_uploads tuyệt đối
-        String uploadDir = System.getProperty("user.dir") + "/aidims-backend/dicom_uploads/";
+        String uploadDir;
+        String userDir = System.getProperty("user.dir");
+        if (userDir.endsWith("aidims-backend") || userDir.endsWith("aidims-backend\\") || userDir.endsWith("aidims-backend/")) {
+            uploadDir = userDir + "/dicom_uploads/";
+        } else {
+            uploadDir = userDir + "/aidims-backend/dicom_uploads/";
+        }
         File dir = new File(uploadDir);
         if (!dir.exists()) dir.mkdirs();
         

@@ -1,3 +1,4 @@
+import "./apiInterceptor.js"
 import ReactDOM from "react-dom/client"
 import HomePage from "./pages/Guest/index.js"
 import { BrowserRouter, Routes, Route } from "react-router-dom"
@@ -31,60 +32,64 @@ import DoctorLogin from "./pages/Login/DoctorLogin.js"
 import ReceptionistLogin from "./pages/Login/ReceptionistLogin.js"
 import TechnicianLogin from "./pages/Login/TechnicianLogin.js"
 import AdminLogin from "./pages/Login/AdminLogin.js"
+import { ProtectedRoute, PublicRoute } from "./components/ProtectedRoute.js"
 
 const root = ReactDOM.createRoot(document.getElementById("root"))
 root.render(
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        
+        {/* Auth / Public Routes - /login (role selection) is public. Role logins redirect if matching role. */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/LoginRegister" element={<Login />} /> {/* Redirect cũ */}
+        <Route path="/LoginRegister" element={<Login />} />
+        <Route path="/login/doctor" element={<PublicRoute restrictedRole="doctor"><DoctorLogin /></PublicRoute>} />
+        <Route path="/login/receptionist" element={<PublicRoute restrictedRole="receptionist"><ReceptionistLogin /></PublicRoute>} />
+        <Route path="/login/technician" element={<PublicRoute restrictedRole="technician"><TechnicianLogin /></PublicRoute>} />
+        <Route path="/login/admin" element={<PublicRoute restrictedRole="admin"><AdminLogin /></PublicRoute>} />
+
         {/* Doctor Routes */}
-        <Route path="/IndexDoctor" element={<IndexDoctor />} />
-        <Route path="/doctor/patients" element={<PatientProfile />} />
-        <Route path="/PatientProfile" element={<PatientProfile />} /> {/* Redirect cũ */}
-        <Route path="/doctor/reports" element={<MedicalReportForm />} />
-        <Route path="MedicalReportForm" element={<MedicalReportForm />} />
-        <Route path="/doctor/dicom-viewer" element={<DicomViewer />} />
-        <Route path="/doctor/compare-images" element={<CompareImages/>}/>
-        <Route path="/doctor/symptom" element={<SymptomDisplayLayout />} />
-        <Route path="/SymptomDisplay" element={<SymptomDisplayLayout />} />
-        <Route path="/doctor/imagereport" element={<CreateImagingRequest />} />
-        <Route path="/CreateImagingRequest" element={<CreateImagingRequest />} />
-        <Route path="/MiniChatBot" element={<MiniChatBot />} />
+        <Route path="/IndexDoctor" element={<ProtectedRoute allowedRoles={["doctor"]}><IndexDoctor /></ProtectedRoute>} />
+        <Route path="/doctor/patients" element={<ProtectedRoute allowedRoles={["doctor"]}><PatientProfile /></ProtectedRoute>} />
+        <Route path="/PatientProfile" element={<ProtectedRoute allowedRoles={["doctor"]}><PatientProfile /></ProtectedRoute>} />
+        <Route path="/doctor/reports" element={<ProtectedRoute allowedRoles={["doctor"]}><MedicalReportForm /></ProtectedRoute>} />
+        <Route path="MedicalReportForm" element={<ProtectedRoute allowedRoles={["doctor"]}><MedicalReportForm /></ProtectedRoute>} />
+        <Route path="/doctor/dicom-viewer" element={<ProtectedRoute allowedRoles={["doctor"]}><DicomViewer /></ProtectedRoute>} />
+        <Route path="/doctor/compare-images" element={<ProtectedRoute allowedRoles={["doctor"]}><CompareImages /></ProtectedRoute>} />
+        <Route path="/doctor/symptom" element={<ProtectedRoute allowedRoles={["doctor"]}><SymptomDisplayLayout /></ProtectedRoute>} />
+        <Route path="/SymptomDisplay" element={<ProtectedRoute allowedRoles={["doctor"]}><SymptomDisplayLayout /></ProtectedRoute>} />
+        <Route path="/doctor/imagereport" element={<ProtectedRoute allowedRoles={["doctor"]}><CreateImagingRequest /></ProtectedRoute>} />
+        <Route path="/CreateImagingRequest" element={<ProtectedRoute allowedRoles={["doctor"]}><CreateImagingRequest /></ProtectedRoute>} />
+        <Route path="/MiniChatBot" element={<ProtectedRoute allowedRoles={["doctor"]}><MiniChatBot /></ProtectedRoute>} />
 
         {/* Receptionist Routes */}
-        <Route path="/login/receptionist" element={<ReceptionistLogin />} />
-        <Route path="/IndexReceptionist" element={<IndexReceptionist />} />
-        <Route path="/receptionist" element={<IndexReceptionist />} />
-        <Route path="/receptionist/patients" element={<PatientForm />} />
-        <Route path="/receptionist/symptoms" element={<SymptomRecord />} />
-        <Route path="/receptionist/assign" element={<AssignDoctor />} />
-        <Route path="/patient" element={<PatientForm />} /> {/* Redirect cũ */}
+        <Route path="/IndexReceptionist" element={<ProtectedRoute allowedRoles={["receptionist"]}><IndexReceptionist /></ProtectedRoute>} />
+        <Route path="/receptionist" element={<ProtectedRoute allowedRoles={["receptionist"]}><IndexReceptionist /></ProtectedRoute>} />
+        <Route path="/receptionist/patients" element={<ProtectedRoute allowedRoles={["receptionist"]}><PatientForm /></ProtectedRoute>} />
+        <Route path="/receptionist/symptoms" element={<ProtectedRoute allowedRoles={["receptionist"]}><SymptomRecord /></ProtectedRoute>} />
+        <Route path="/receptionist/assign" element={<ProtectedRoute allowedRoles={["receptionist"]}><AssignDoctor /></ProtectedRoute>} />
+        <Route path="/patient" element={<ProtectedRoute allowedRoles={["receptionist"]}><PatientForm /></ProtectedRoute>} />
+
         {/* Technician Routes */}
-        <Route path="/IndexTechnician" element={<IndexTechnician />} />
-        <Route path="/technician" element={<IndexTechnician />} />
-        <Route path="/technician/import-dicom" element={<ImportDicom />} />
-        <Route path="/technician/verify-images" element={<VerifyImages />} />
-        <Route path="/technician/assign-images" element={<AssignImages />} />
+        <Route path="/IndexTechnician" element={<ProtectedRoute allowedRoles={["technician"]}><IndexTechnician /></ProtectedRoute>} />
+        <Route path="/technician" element={<ProtectedRoute allowedRoles={["technician"]}><IndexTechnician /></ProtectedRoute>} />
+        <Route path="/technician/import-dicom" element={<ProtectedRoute allowedRoles={["technician"]}><ImportDicom /></ProtectedRoute>} />
+        <Route path="/technician/verify-images" element={<ProtectedRoute allowedRoles={["technician"]}><VerifyImages /></ProtectedRoute>} />
+        <Route path="/technician/assign-images" element={<ProtectedRoute allowedRoles={["technician"]}><AssignImages /></ProtectedRoute>} />
+
         {/* Admin Routes */}
-        <Route path="/IndexAdmin" element={<IndexAdmin />} />
-        <Route path="/admin" element={<IndexAdmin />} />
-        <Route path="/admin/users" element={<UserManagement />} />
-        <Route path="/admin/system" element={<SystemMonitoring />} />
-        <Route path="/admin/settings" element={<SystemSettings />} />
+        <Route path="/IndexAdmin" element={<ProtectedRoute allowedRoles={["admin"]}><IndexAdmin /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]}><IndexAdmin /></ProtectedRoute>} />
+        <Route path="/admin/users" element={<ProtectedRoute allowedRoles={["admin"]}><UserManagement /></ProtectedRoute>} />
+        <Route path="/admin/system" element={<ProtectedRoute allowedRoles={["admin"]}><SystemMonitoring /></ProtectedRoute>} />
+        <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={["admin"]}><SystemSettings /></ProtectedRoute>} />
+
         {/* Guest Routes */}
         <Route path="/About" element={<About />} />
         <Route path="/Contact" element={<Contact />} />
         <Route path="/Feature" element={<Feature />} />
-        <Route path="/User" element={<User />} />
-        {/* Catch-all route */}
-
-        <Route path="/login/doctor" element={<DoctorLogin />} />
-
-        <Route path="/login/technician" element={<TechnicianLogin />} />
-        <Route path="/login/admin" element={<AdminLogin />} />
+        <Route path="/User" element={<ProtectedRoute><User /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>,
 )

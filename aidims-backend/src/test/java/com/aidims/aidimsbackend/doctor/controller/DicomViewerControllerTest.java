@@ -27,6 +27,12 @@ class DicomViewerControllerTest {
     @MockBean
     private DicomViewerService dicomViewerService;
 
+    @MockBean
+    private com.aidims.aidimsbackend.config.JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    private com.aidims.aidimsbackend.service.DicomConverterService dicomConverterService;
+
     @Test
     void getAllDicomViewer_shouldReturnOk() throws Exception {
         when(dicomViewerService.getAllDicomViewer())

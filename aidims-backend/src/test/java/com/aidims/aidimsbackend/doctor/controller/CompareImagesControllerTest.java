@@ -28,6 +28,9 @@ class CompareImagesControllerTest {
     @MockBean
     private CompareImagesService compareImagesService;
 
+    @MockBean
+    private com.aidims.aidimsbackend.config.JwtTokenProvider jwtTokenProvider;
+
     @Test
     void testEndpoint_shouldReturnOk() throws Exception {
         mockMvc.perform(get("/api/compare-images/test"))

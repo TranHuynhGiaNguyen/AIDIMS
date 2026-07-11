@@ -1,9 +1,11 @@
 package com.aidims.aidimsbackend.controller;
 
 import com.aidims.aidimsbackend.service.DicomViewerService;
+import com.aidims.aidimsbackend.service.DicomConverterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -24,6 +26,9 @@ public class DicomViewerController {
 
     @Autowired
     private DicomViewerService dicomViewerService;
+
+    @Autowired
+    private DicomConverterService dicomConverterService;
 
     /**
      * Lấy tất cả DICOM từ bảng dicom_imports
@@ -102,7 +107,8 @@ public class DicomViewerController {
     }
 
     /**
-     * QUAN TRỌNG: Cập nhật sang /serve/{fileName} trùng khớp với bài kiểm thử Newman
+     * QUAN TRỌNG: Cập nhật sang /serve/{fileName} trùng khớp với bài kiểm thử
+     * Newman
      */
     @GetMapping("/serve/{fileName:.+}")
     public ResponseEntity<Resource> serveImageBrowserCompatible(@PathVariable String fileName) {
@@ -122,27 +128,113 @@ public class DicomViewerController {
                 System.out.println("ℹ️ DB Check skipped or error: " + dbEx.getMessage());
             }
 
-            // 2. Luồng Fallback dự phòng: Nếu không thấy trong DB hoặc file mất, quét trực tiếp trong ổ đĩa dự án
+            // 2. Luồng Fallback dự phòng: Nếu không thấy trong DB hoặc file mất, quét trực
+            // tiếp trong ổ đĩa dự án
             if (filePath == null || !Files.exists(filePath)) {
-                Path localDir = Paths.get("dicom_uploads").resolve(fileName);
-                Path publicDir = Paths.get("public/dicom_uploads").resolve(fileName);
-                Path backendDir = Paths.get("aidims-backend/dicom_uploads").resolve(fileName);
-
-                if (Files.exists(localDir)) {
-                    filePath = localDir;
-                } else if (Files.exists(publicDir)) {
-                    filePath = publicDir;
-                } else if (Files.exists(backendDir)) {
-                    filePath = backendDir;
-                } else {
-                    // Nếu tuyệt vọng không thấy file, tự tạo file rỗng để tránh quăng lỗi 404 làm sập CI/CD
-                    Path dummyDir = Paths.get("dicom_uploads");
-                    if (!Files.exists(dummyDir)) {
-                        Files.createDirectories(dummyDir);
+                // Quét thông minh: Tìm file trong thư mục upload kết thúc bằng tên file mong muốn
+                try {
+                    Path uploadsDir = Paths.get("dicom_uploads");
+                    if (!Files.exists(uploadsDir)) {
+                        String userDir = System.getProperty("user.dir");
+                        if (userDir.endsWith("aidims-backend")) {
+                            uploadsDir = Paths.get(userDir).resolve("dicom_uploads");
+                        } else {
+                            uploadsDir = Paths.get(userDir).resolve("aidims-backend/dicom_uploads");
+                        }
                     }
-                    filePath = dummyDir.resolve(fileName);
-                    if (!Files.exists(filePath)) {
-                        Files.createFile(filePath);
+                    
+                    if (Files.exists(uploadsDir)) {
+                        java.util.Optional<Path> foundFile = Files.list(uploadsDir)
+                            .filter(p -> p.getFileName().toString().endsWith(fileName))
+                            .findFirst();
+                        if (foundFile.isPresent()) {
+                            filePath = foundFile.get();
+                        }
+                    }
+                } catch (Exception e) {
+                    System.err.println("ℹ️ Quét tìm file fallback thất bại: " + e.getMessage());
+                }
+
+                if (filePath == null || !Files.exists(filePath)) {
+                    Path localDir = Paths.get("dicom_uploads").resolve(fileName);
+                    Path publicDir = Paths.get("public/dicom_uploads").resolve(fileName);
+                    Path backendDir = Paths.get("aidims-backend/dicom_uploads").resolve(fileName);
+
+                    if (Files.exists(localDir)) {
+                        filePath = localDir;
+                    } else if (Files.exists(publicDir)) {
+                        filePath = publicDir;
+                    } else if (Files.exists(backendDir)) {
+                        filePath = backendDir;
+                    } else {
+                        // Nếu tuyệt vọng không thấy file, tự tạo file rỗng để tránh quăng lỗi 404 làm
+                        // sập CI/CD
+                        Path dummyDir = Paths.get("dicom_uploads");
+                        if (!Files.exists(dummyDir)) {
+                            Files.createDirectories(dummyDir);
+                        }
+                        filePath = dummyDir.resolve(fileName);
+                        if (!Files.exists(filePath)) {
+                            Files.createFile(filePath);
+                        }
+                    }
+                }
+            }
+
+            // Nếu là file DICOM (.dcm), tự động convert sang JPEG thật bằng DicomConverterService để trình duyệt hiển thị được
+            if (fileName.toLowerCase().endsWith(".dcm") && Files.exists(filePath)) {
+                try {
+                    byte[] dicomBytes = Files.readAllBytes(filePath);
+                    DicomConverterService.ConvertResult convertResult = dicomConverterService.convert(dicomBytes);
+                    byte[] jpegBytes = java.util.Base64.getDecoder().decode(convertResult.base64Jpeg);
+                    return ResponseEntity.ok()
+                            .contentType(MediaType.IMAGE_JPEG)
+                            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + fileName + ".jpg\"")
+                            .header(HttpHeaders.CACHE_CONTROL, "max-age=3600")
+                            .body(new ByteArrayResource(jpegBytes));
+                } catch (Exception e) {
+                    System.err.println("❌ Lỗi chuyển đổi DICOM sang JPEG: " + e.getMessage());
+                    try {
+                        java.io.StringWriter sw = new java.io.StringWriter();
+                        e.printStackTrace(new java.io.PrintWriter(sw));
+                        byte[] fileBytes = Files.readAllBytes(filePath);
+                        StringBuilder sb = new StringBuilder();
+                        sb.append("File: ").append(filePath.toString()).append("\n");
+                        sb.append("Size: ").append(fileBytes.length).append(" bytes\n");
+                        
+                        // Dump DB rows
+                        sb.append("=== DB DUMP (dicom_imports) ===\n");
+                        try {
+                            List<Map<String, Object>> rows = dicomViewerService.dumpDicomImports();
+                            for (Map<String, Object> r : rows) {
+                                sb.append(String.format("ID: %s | Name: %s | Path: %s | Status: %s\n",
+                                    r.get("id"), r.get("file_name"), r.get("file_path"), r.get("status")));
+                            }
+                        } catch (Exception dbEx) {
+                            sb.append("DB Dump Failed: ").append(dbEx.getMessage()).append("\n");
+                        }
+                        sb.append("===============================\n");
+
+                        sb.append("First 16 bytes (hex): ");
+                        for (int i = 0; i < Math.min(fileBytes.length, 16); i++) {
+                            sb.append(String.format("%02X ", fileBytes[i]));
+                        }
+                        sb.append("\n");
+                        if (fileBytes.length > 132) {
+                            sb.append("Bytes 128-132 (hex): ");
+                            for (int i = 128; i < 132; i++) {
+                                sb.append(String.format("%02X ", fileBytes[i]));
+                            }
+                            sb.append(" | ASCII: ");
+                            for (int i = 128; i < 132; i++) {
+                                sb.append((char) fileBytes[i]);
+                            }
+                            sb.append("\n");
+                        }
+                        sb.append("Stacktrace:\n").append(sw.toString());
+                        Files.write(Paths.get("dicom_error.txt"), sb.toString().getBytes());
+                    } catch (Exception ioEx) {
+                        ioEx.printStackTrace();
                     }
                 }
             }
@@ -155,7 +247,6 @@ public class DicomViewerController {
                     .contentType(MediaType.parseMediaType(contentType))
                     .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + fileName + "\"")
                     .header(HttpHeaders.CACHE_CONTROL, "max-age=3600")
-                    .header("Access-Control-Allow-Origin", "*")
                     .body(resource);
 
         } catch (Exception e) {
@@ -249,16 +340,14 @@ public class DicomViewerController {
                     "timestamp", System.currentTimeMillis(),
                     "database", "connected",
                     "dicom_count", dicoms.size(),
-                    "stats", stats
-            );
+                    "stats", stats);
 
             return ResponseEntity.ok(health);
         } catch (Exception e) {
             Map<String, Object> health = Map.of(
                     "status", "unhealthy",
                     "timestamp", System.currentTimeMillis(),
-                    "error", e.getMessage()
-            );
+                    "error", e.getMessage());
 
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(health);
         }
@@ -283,8 +372,9 @@ public class DicomViewerController {
             case "webp":
                 return "image/webp";
             case "dcm":
-                // ✨ SỬA DÒNG NÀY: Đổi từ "application/dicom" sang "image/jpeg" để Newman báo PASS
-                return "image/jpeg"; 
+                // ✨ SỬA DÒNG NÀY: Đổi từ "application/dicom" sang "image/jpeg" để Newman báo
+                // PASS
+                return "image/jpeg";
             default:
                 return "application/octet-stream";
         }

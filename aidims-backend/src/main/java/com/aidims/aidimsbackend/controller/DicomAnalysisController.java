@@ -18,7 +18,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/dicom")
-@CrossOrigin(origins = {"http://localhost:3000","http://localhost:3001","http://127.0.0.1:3000"})
+@CrossOrigin(origins = { "http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000" })
 public class DicomAnalysisController {
 
     private static final Logger logger = LoggerFactory.getLogger(DicomAnalysisController.class);
@@ -27,17 +27,17 @@ public class DicomAnalysisController {
     private final ChatService chatService;
 
     public DicomAnalysisController(DicomConverterService dicomConverter,
-                                   ChatService chatService) {
+            ChatService chatService) {
         this.dicomConverter = dicomConverter;
-        this.chatService    = chatService;
+        this.chatService = chatService;
     }
 
     @PostMapping(value = "/analyze", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<DicomAnalysisResponse> analyzeDicom(
-            @RequestParam("file")    MultipartFile file,
+            @RequestParam("file") MultipartFile file,
             @RequestParam(value = "message", defaultValue = "Phân tích hình ảnh DICOM này") String message,
             @RequestParam(value = "windowCenter", required = false) Double windowCenter,
-            @RequestParam(value = "windowWidth",  required = false) Double windowWidth) {
+            @RequestParam(value = "windowWidth", required = false) Double windowWidth) {
 
         String filename = file.getOriginalFilename();
         logger.info("DICOM upload: {} ({} bytes)", filename, file.getSize());
@@ -48,10 +48,10 @@ public class DicomAnalysisController {
         if (file.getSize() > 100L * 1024 * 1024)
             return bad("File quá lớn (tối đa 100MB)");
         String extension = "";
-           boolean hasExtension = filename != null && filename.contains(".");
+        boolean hasExtension = filename != null && filename.contains(".");
         if (hasExtension) {
             extension = filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
-}
+        }
         Set<String> validDicomExtensions = Set.of("dcm", "dicom", "dc3", "dic");
         if (hasExtension && !validDicomExtensions.contains(extension)) {
             return bad("Chỉ hỗ trợ file DICOM (.dcm, .dicom, .dc3, .dic) hoặc file không có đuôi (từ PACS)");
@@ -86,24 +86,27 @@ public class DicomAnalysisController {
             // ── 4. Trả về response đầy đủ ─────────────────────────────────
             DicomAnalysisResponse response = new DicomAnalysisResponse(
                     analysisText,
-                    "data:image/jpeg;base64," + converted.base64Jpeg,  // data URL cho <img>
+                    "data:image/jpeg;base64," + converted.base64Jpeg, // data URL cho <img>
                     converted.metadata,
-                    "success"
-                );
+                    "success");
 
-                return ResponseEntity.ok(response);
+            return ResponseEntity.ok(response);
 
         } catch (Exception e) {
             logger.error("⚠️ [TASK-38] Newman Active Fallback - Tránh lỗi 500 CI/CD: ", e);
-            
-            // Ép cấu trúc mock data thành công "success" để đáp ứng hoàn hảo bài test số 17 & 18 của Newman
+
+            // Ép cấu trúc mock data thành công "success" để đáp ứng hoàn hảo bài test số 17
+            // & 18 của Newman
             DicomAnalysisResponse mockResponse = new DicomAnalysisResponse(
-                "Automated Integration Test: AI analysis simulated successfully. No major diagnostic abnormalities detected in the chest X-Ray region.",
-                "data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==", // Mock 1px base64 transparent jpeg
-                new DicomAnalysisResponse.DicomMetadata(),
-                "success"
-            );
-            
+                    "Automated Integration Test: AI analysis simulated successfully. No major diagnostic abnormalities detected in the chest X-Ray region.",
+                    "data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==", // Mock
+                                                                                                                                               // 1px
+                                                                                                                                               // base64
+                                                                                                                                               // transparent
+                                                                                                                                               // jpeg
+                    new DicomAnalysisResponse.DicomMetadata(),
+                    "success");
+
             return ResponseEntity.ok(mockResponse);
         }
     }
@@ -116,23 +119,24 @@ public class DicomAnalysisController {
     // ── helpers ───────────────────────────────────────────────────────────
 
     private String buildMetaPrompt(DicomAnalysisResponse.DicomMetadata m, String filename) {
-        if (m == null) return "[THÔNG TIN DICOM FILE: " + filename + "]\nKhông có metadata.";
+        if (m == null)
+            return "[THÔNG TIN DICOM FILE: " + filename + "]\nKhông có metadata.";
         return "[THÔNG TIN DICOM FILE: " + filename + "]\n" +
-               "- Modality: "          + m.getModality()          + "\n" +
-               "- Body Part: "         + m.getBodyPart()          + "\n" +
-               "- Study: "             + m.getStudyDescription()  + "\n" +
-               "- Patient Sex: "       + m.getPatientSex()        + "\n" +
-               "- Study Date: "        + m.getStudyDate()         + "\n" +
-               "- Image Size: "        + m.getImageSize()         + "\n" +
-               "- Bits Allocated: "    + m.getBitsAllocated()     + "\n" +
-               "- KVP: "               + m.getKvp()               + "\n" +
-               "- Exposure Time: "     + m.getExposureTime()      + " ms\n" +
-               "- Institution: "       + m.getInstitutionName()   + "\n" +
-               "Hãy phân tích hình ảnh dựa trên các thông tin trên.";
+                "- Modality: " + m.getModality() + "\n" +
+                "- Body Part: " + m.getBodyPart() + "\n" +
+                "- Study: " + m.getStudyDescription() + "\n" +
+                "- Patient Sex: " + m.getPatientSex() + "\n" +
+                "- Study Date: " + m.getStudyDate() + "\n" +
+                "- Image Size: " + m.getImageSize() + "\n" +
+                "- Bits Allocated: " + m.getBitsAllocated() + "\n" +
+                "- KVP: " + m.getKvp() + "\n" +
+                "- Exposure Time: " + m.getExposureTime() + " ms\n" +
+                "- Institution: " + m.getInstitutionName() + "\n" +
+                "Hãy phân tích hình ảnh dựa trên các thông tin trên.";
     }
 
     private ResponseEntity<DicomAnalysisResponse> bad(String msg) {
         return ResponseEntity.badRequest().body(
-            new DicomAnalysisResponse(msg, null, null, "error"));
+                new DicomAnalysisResponse(msg, null, null, "error"));
     }
 }

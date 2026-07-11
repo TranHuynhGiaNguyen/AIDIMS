@@ -29,6 +29,9 @@ class PatientControllerTest {
     @MockBean
     private PatientRepository patientRepository;
 
+    @MockBean
+    private com.aidims.aidimsbackend.config.JwtTokenProvider jwtTokenProvider;
+
     private Patient createPatient(Long id, Integer oxygenSaturation) {
         Patient patient = new Patient();
         patient.setPatient_id(id);
