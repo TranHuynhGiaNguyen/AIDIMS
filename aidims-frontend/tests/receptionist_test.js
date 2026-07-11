@@ -10,8 +10,8 @@ Scenario('Lễ tân tiếp nhận bệnh nhân mới', ({ I }) => {
     // ==========================
     I.amOnPage('/login/receptionist');
 
-    I.fillField('Tên đăng nhập', '1');
-    I.fillField('Mật khẩu', '1');
+    I.fillField('Tên đăng nhập', '2');
+    I.fillField('Mật khẩu', '2');
 
     I.click('Đăng nhập');
 
